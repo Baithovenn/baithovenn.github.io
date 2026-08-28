@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="Vorsätze umrechnen üben: kilo, milli, mikro. Die Zahlen wandern, nicht das Komma.">
+<meta name="description" content="Vorsätze umrechnen üben: kilo, milli, mikro. Vier Schritte: Einheit, Zahl, Stellen, Ergebnis.">
 <title>Die Treppe – Vorsätze umrechnen</title>
 <style>
 :root { --hblue: #00468c; --hbg: #ebf2fa; --hgruen: #146e3c;
@@ -32,9 +32,6 @@ button { font: inherit; min-height: 48px; padding: 8px 14px; border-radius: 10px
   border: 1.5px solid var(--hblue); background: white; color: var(--hblue);
   cursor: pointer; }
 button:active { background: var(--hbg); }
-button:disabled { opacity: 0.45; cursor: default; color: #7a8794;
-  border-color: #b9c6d6; }
-button:disabled:active { background: white; }
 :focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
 .side .karte { margin-bottom: 12px; }
 .side button { width: 100%; margin-top: 8px; }
@@ -43,59 +40,74 @@ button:disabled:active { background: white; }
 .merk { background: var(--hbg); border-left: 4px solid var(--hblue);
   padding: 7px 10px; border-radius: 0 8px 8px 0; font-size: 0.93rem; }
 
-/* Aufgabe */
-#aufgabe { font-size: 1.6rem; color: var(--hblue); text-align: center; margin: 4px 0 14px; }
+#aufgabe { font-size: 1.55rem; color: var(--hblue); text-align: center; margin: 4px 0 12px; }
 #aufgabe b { color: var(--hgruen); }
+sup { font-size: 0.65em; }
 
-/* Treppe */
-#treppe { position: relative; margin: 4px auto 18px; }
-.stufe { position: absolute; display: grid; place-items: center;
+/* Treppe (Nachschlagewerk, kein Spielstein) */
+#treppe { position: relative; margin: 2px auto 16px; }
+.stufe { position: absolute; display: grid; place-items: center; line-height: 1.15;
   border: 1.5px solid #b9c9da; border-radius: 8px; background: #fdfefe;
-  color: #445; font-size: 0.95rem; }
+  color: #445; font-size: 0.92rem; text-align: center; }
+.stufe .pot { font-size: 0.72rem; color: #7a8a9a; }
 .stufe.von { border-color: var(--hblue); border-width: 2px; color: var(--hblue);
   font-weight: bold; }
 .stufe.ziel { border-color: var(--hgruen); border-width: 2px; border-style: dashed;
   color: var(--hgruen); font-weight: bold; }
-.kante { position: absolute; font-size: 0.72rem; color: #7a8a9a;
-  font-family: Arial, sans-serif; }
-#marker { position: absolute; width: 16px; height: 16px; border-radius: 50%;
+#marker { position: absolute; width: 15px; height: 15px; border-radius: 50%;
   background: var(--hblue); border: 2.5px solid white;
-  box-shadow: 0 0 0 1.5px var(--hblue); transition: left .18s, top .18s; z-index: 2; }
-@media (prefers-reduced-motion: reduce) { #marker { transition: none; } }
+  box-shadow: 0 0 0 1.5px var(--hblue); transition: left .3s, top .3s; z-index: 2;
+  display: none; }
 
-/* Ziffernband */
-#bandzone { background: #f2f6fa; border-radius: 10px; padding: 14px 8px 10px; }
-#band { display: flex; justify-content: center; align-items: center;
-  min-height: 52px; position: relative; }
+/* Denkkette */
+#ablauf { margin-top: 4px; }
+.fertig { display: flex; align-items: center; gap: 8px; color: var(--hgruen);
+  padding: 5px 2px; font-size: 1.02rem; }
+.fertig .hak { font-weight: bold; }
+.schritt { background: #f2f6fa; border-radius: 10px; padding: 12px 14px;
+  margin-top: 8px; }
+.frage { font-size: 1.08rem; margin-bottom: 10px; }
+.frage b { color: var(--hblue); }
+.wahl { display: flex; gap: 10px; flex-wrap: wrap; }
+.wahl button { min-width: 110px; font-size: 1.02rem; }
+.stellen { display: flex; gap: 7px; flex-wrap: wrap; }
+.stellen button { min-width: 48px; padding: 8px 0; font-size: 1.05rem; }
+.hinweis { margin-top: 9px; color: var(--orange); font-size: 0.95rem; display: none; }
+.hinweis.zeig { display: block; }
+
+/* Ergebnis-Eingabe */
+#erg { width: 100%; min-height: 50px; font: inherit; font-size: 1.35rem;
+  text-align: center; border: 1.5px dashed var(--hblue); border-radius: 10px;
+  color: var(--hblue); padding: 6px; background: white; margin-bottom: 10px; }
+#pad { display: grid; grid-template-columns: repeat(4, minmax(52px, 72px));
+  gap: 7px; justify-content: center; }
+#pad button { min-height: 48px; font-size: 1.15rem; padding: 4px 0; }
+#pad .del { color: var(--warnrot); border-color: #d8b4b4; background: #fdf6f6; }
+#pad .go { grid-column: span 2; background: var(--hblue); color: white;
+  font-weight: bold; }
+#pad .go:active { background: #003064; }
+
+/* Aufloesung */
+#bandzone { background: #f2f6fa; border-radius: 10px; padding: 12px 8px 8px;
+  margin-top: 10px; display: none; }
+#band { display: flex; justify-content: center; align-items: center; min-height: 48px; }
 .bint, .bfrac { display: flex; flex: 1 1 0; min-width: 0; }
 .bint { justify-content: flex-end; }
 .bfrac { justify-content: flex-start; }
-.zif { width: 34px; height: 44px; display: grid; place-items: center;
-  font-size: 1.5rem; color: #1a1a1a; }
+.zif { width: 30px; height: 40px; display: grid; place-items: center;
+  font-size: 1.35rem; }
 .zif.gruppe { margin-left: 5px; }
-.zif.neu { color: var(--hgruen); animation: rein .35s; }
-@keyframes rein { from { background: #e2f2e8; } to { background: transparent; } }
-#anker { flex: none; width: 14px; height: 52px; position: relative; }
-#anker::before { content: ""; position: absolute; left: 50%; top: -6px; bottom: -2px;
+#anker { flex: none; width: 13px; height: 48px; position: relative; }
+#anker::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: 0;
   width: 2px; background: #b9c9da; }
 #anker .kglyph { position: absolute; left: 50%; transform: translateX(-50%);
-  bottom: -4px; font-size: 1.6rem; color: var(--hblue); font-weight: bold; }
-#zaehler { text-align: center; color: #556; font-size: 0.92rem; min-height: 1.3em;
-  margin-top: 6px; }
+  bottom: -6px; font-size: 1.45rem; color: var(--hblue); font-weight: bold; }
+#bandtext { text-align: center; color: #556; font-size: 0.9rem; margin-top: 4px;
+  min-height: 1.2em; }
 
-/* Schieben + Pruefen */
-#tasten { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
-  margin: 14px 0 4px; }
-#tasten button { font-size: 1.05rem; }
-#bPruef { background: var(--hblue); color: white; font-weight: bold; padding: 8px 26px; }
-#bPruef:active { background: #003064; }
-
-/* Banner */
 .banner { margin-top: 12px; border-radius: 10px; padding: 11px 14px; display: none; }
 .banner.ok { display: block; background: #e9f5ee; border: 1.5px solid var(--hgruen);
   color: var(--hgruen); }
-.banner.err { display: block; background: #fbeaea; border: 1.5px solid var(--warnrot);
-  color: var(--warnrot); }
 .banner.warn { display: block; background: #fdf3e2; border: 1.5px solid var(--orange);
   color: var(--orange); }
 .bbtn { margin: 8px 8px 0 0; }
@@ -105,9 +117,10 @@ footer { text-align: center; color: #8a97a5; font-size: 0.85rem; padding: 10px 0
 
 @media (max-width: 820px) {
   #layout { grid-template-columns: 1fr; }
-  .zif { width: 26px; height: 38px; font-size: 1.2rem; }
   #aufgabe { font-size: 1.3rem; }
+  .zif { width: 24px; height: 36px; font-size: 1.15rem; }
 }
+@media (prefers-reduced-motion: reduce) { #marker { transition: none; } }
 </style>
 </head>
 <body>
@@ -117,7 +130,7 @@ footer { text-align: center; color: #8a97a5; font-size: 0.85rem; padding: 10px 0
 </a>
 <div class="wrap">
   <h1>Die Treppe &ndash; Vors&auml;tze umrechnen</h1>
-  <p class="sub">Die Zahlen wandern, nicht das Komma.</p>
+  <p class="sub">Vier Schritte: Einheit &rarr; Zahl &rarr; Stellen &rarr; Ergebnis.</p>
   <div id="layout">
     <div class="side">
       <div class="karte">
@@ -128,12 +141,12 @@ footer { text-align: center; color: #8a97a5; font-size: 0.85rem; padding: 10px 0
       <div class="karte" id="tipp">
         <details>
           <summary>Wie funktioniert die Treppe?</summary>
-          <p>Jede Stufe ist ein Vorsatz. An der Stufenkante steht, um
-          <b>wie viele Stellen</b> die Zahlen dort wandern.</p>
-          <p>Gehst du die Treppe <b>hinab</b> (zur kleineren Einheit), wird die
-          Zahl gr&ouml;&szlig;er: Die Ziffern wandern nach <b>links</b>, leere
-          Pl&auml;tze werden mit Nullen gef&uuml;llt. Hinauf ist es umgekehrt.</p>
-          <p class="merk">Die Treppe sagt dir, wie viele Stellen.<br>
+          <p>Jede Stufe ist ein Vorsatz. Vor dem Rechnen kommt die Denkkette:</p>
+          <p>1. Wird die <b>Einheit</b> gr&ouml;&szlig;er oder kleiner?<br>
+             2. Dann wird die <b>Zahl</b> genau umgekehrt.<br>
+             3. Die Treppe zeigt, um <b>wie viele Stellen</b>.<br>
+             4. Ergebnis aufschreiben &ndash; fertig.</p>
+          <p class="merk">Kleinere Einheit &rarr; gr&ouml;&szlig;ere Zahl.<br>
           Das Komma steht fest &ndash; die Zahlen wandern hindurch.</p>
         </details>
       </div>
@@ -141,15 +154,11 @@ footer { text-align: center; color: #8a97a5; font-size: 0.85rem; padding: 10px 0
     <div class="karte" id="main">
       <div id="aufgabe"></div>
       <div id="treppe" role="img" aria-label="Einheitentreppe"></div>
+      <div id="ablauf"></div>
       <div id="bandzone">
         <div id="band"></div>
-        <div id="zaehler" aria-live="polite"></div>
-      </div>
-      <div id="tasten">
-        <button id="bLinks">&#9664; Zahlen schieben</button>
-        <button id="bRechts">Zahlen schieben &#9654;</button>
-        <button id="bReset">Zur&uuml;cksetzen</button>
-        <button id="bPruef">Pr&uuml;fen</button>
+        <div id="anim-caption" style="display:none"></div>
+        <div id="bandtext"></div>
       </div>
       <div class="banner" id="banner"></div>
     </div>
@@ -158,7 +167,7 @@ footer { text-align: center; color: #8a97a5; font-size: 0.85rem; padding: 10px 0
 <footer>L&auml;uft offline &middot; keine Daten werden gespeichert oder gesendet</footer>
 
 <script>
-// ============ Rechenlogik "Die Treppe" (reine String-Arithmetik, keine Floats) ============
+// ============ Rechenlogik "Die Treppe" v2 (String-Arithmetik, keine Floats) ============
 const TREPPEN = {
   p3: [ { p: 'G', e: 9 }, { p: 'M', e: 6 }, { p: 'k', e: 3 }, { p: '', e: 0 },
         { p: 'm', e: -3 }, { p: '\u00b5', e: -6 }, { p: 'n', e: -9 }, { p: 'p', e: -12 } ],
@@ -166,62 +175,75 @@ const TREPPEN = {
          { p: 'mm', e: -3 }, { p: '\u00b5m', e: -6 } ],
 };
 const BASISEINHEITEN = ['\u03a9', 'V', 'A', 'W', 'F', 'H', 'Hz', 's', 'Pa', 'bar'];
-
-// Einheitenkatalog: Name -> { e: Exponent, fam: Treppen-Familie, basis }
 const UNIT = {};
 BASISEINHEITEN.forEach(b => {
   TREPPEN.p3.forEach(st => { UNIT[st.p + b] = { e: st.e, fam: 'p3', basis: b }; });
 });
 TREPPEN.len.forEach(st => { UNIT[st.p] = { e: st.e, fam: 'len', basis: 'm' }; });
 
-function parseZahl(s) {           // "4,7" -> { d: "47", punkt: 1 }  (punkt = Stellen vor dem Komma)
-  s = s.trim().replace('.', ',');
+const SUP = { '-': '\u207b', '0': '\u2070', '1': '\u00b9', '2': '\u00b2', '3': '\u00b3',
+  '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077', '8': '\u2078', '9': '\u2079' };
+function hoch(n) { return String(n).split('').map(c => SUP[c] || c).join(''); }
+
+function parseZahl(s) {
+  s = String(s).trim().replace(/\u202f/g, '').replace('.', ',');
   if (!/^[0-9]+(,[0-9]+)?$/.test(s)) throw new Error('Zahl: ' + s);
   const t = s.split(',');
-  let d = t[0] + (t[1] || ''), punkt = t[0].length;
-  let f = (t[1] || '').replace(/0+$/, '');            // nachlaufende Nullen im Bruchteil weg
-  d = t[0] + f;
-  return { d: d, punkt: punkt };
+  const f = (t[1] || '').replace(/0+$/, '');
+  return { d: t[0] + f, punkt: t[0].length };
 }
-
-function schiebe(z, k) {          // Ziffern um k Stellen nach links (k>0) bzw. rechts (k<0)
+function schiebe(z, k) {
   let d = z.d, punkt = z.punkt + k;
   while (punkt > d.length) d = d + '0';
   while (punkt < 1) { d = '0' + d; punkt++; }
   return { d: d, punkt: punkt };
 }
-
-function alsText(z) {             // { d, punkt } -> "4700" | "0,047"  (fuehrende Nullen bereinigt)
-  let int = z.d.slice(0, z.punkt).replace(/^0+(?=[0-9])/, '');
-  let frac = z.d.slice(z.punkt).replace(/0+$/, '');
+function alsText(z) {
+  const int = z.d.slice(0, z.punkt).replace(/^0+(?=[0-9])/, '');
+  const frac = z.d.slice(z.punkt).replace(/0+$/, '');
   return frac ? int + ',' + frac : int;
 }
-
-function gruppiert(z) {           // Anzeige mit schmalen Abstaenden: "4 700"
+function gruppiert(z) {
   const t = alsText(z).split(',');
   const int = t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
   const frac = (t[1] || '').replace(/(\d{3})(?=\d)/g, '$1\u202f');
   return frac ? int + ',' + frac : int;
 }
-
-function parseAufgabe(s) {        // "4,7 kOhm -> Ohm"
-  const m = /^([0-9.,]+)\s*(\S+)\s*->\s*(\S+)\s*$/.exec(s);
+// "4,7 kOhm -> Ohm"  oder  "3,3*10^-4 A -> µA"
+function parseAufgabe(s) {
+  const m = /^([0-9.,]+)(?:\*10\^(-?[0-9]+))?\s*(\S+)\s*->\s*(\S+)\s*$/.exec(s);
   if (!m) throw new Error('Aufgabe: ' + s);
-  const von = UNIT[m[2]], nach = UNIT[m[3]];
+  const von = UNIT[m[3]], nach = UNIT[m[4]];
   if (!von || !nach) throw new Error('Einheit unbekannt: ' + s);
   if (von.fam !== nach.fam || von.basis !== nach.basis) throw new Error('Familien gemischt: ' + s);
-  return { wert: parseZahl(m[1]), von: m[2], nach: m[3],
-           fam: von.fam, soll: von.e - nach.e };   // soll > 0: Zahlen nach links
+  const pot = m[2] ? parseInt(m[2], 10) : 0;
+  return { wert: parseZahl(m[1]), pot: pot, von: m[3], nach: m[4], fam: von.fam,
+           eVon: von.e, eNach: nach.e,
+           soll: pot + von.e - nach.e,          // Ziffernwanderung gesamt
+           einheitKleiner: nach.e < von.e };    // Denkkette Schritt 1
 }
-if (typeof module !== 'undefined') module.exports = { TREPPEN, UNIT, parseZahl, schiebe, alsText, gruppiert, parseAufgabe };
+function anzeigeWert(t) {                        // "3,3·10⁻⁴" bzw. "4,7"
+  return gruppiert(t.wert) + (t.pot ? '\u202f\u00b7\u202f10' + hoch(t.pot) : '');
+}
+function normAntwort(s) {                        // Nutzereingabe -> Vergleichsform
+  s = String(s).trim().replace(/\u202f|\s/g, '').replace('.', ',');
+  if (s.startsWith(',')) s = '0' + s;
+  return alsText(parseZahl(s));
+}
+if (typeof module !== 'undefined') module.exports = { TREPPEN, UNIT, hoch, parseZahl,
+  schiebe, alsText, gruppiert, parseAufgabe, anzeigeWert, normAntwort };
 
 </script>
 <script>
 /* ================================================================
    HIER NEUE AUFGABEN EINTRAGEN
-   Format: "Wert Einheit -> Zieleinheit"   Komma als Dezimalzeichen
+   Format: "Wert Einheit -> Zieleinheit"        Komma als Dezimalzeichen
+   Zehnerpotenz:  "3,3*10^-4 A -> µA"
    Einheiten: G M k m µ n p vor Ohm V A W F H Hz s Pa bar
               sowie km m dm cm mm µm
+   Wichtig: Die Ziffern muessen in dieselbe Richtung wandern, in die
+   die Zahl sich aendert (der Test erzwingt das) - sonst bricht die
+   Denkkette Einheit -> Zahl -> Stellen.
    ================================================================ */
 const TSTUFEN = [
 { name: 'Stufe 1 \u2013 eine Stufe', aufgaben: [
@@ -258,7 +280,13 @@ const TSTUFEN = [
   "1,5 kPa -> Pa",
   "0,2 MPa -> kPa",
 ]},
-{ name: 'Stufe 3 \u2013 krumme Werte, weite Wege', aufgaben: [
+{ name: 'Stufe 3 \u2013 Zehnerpotenzen, krumme Werte', aufgaben: [
+  "3,3*10^-4 A -> \u00b5A",
+  "1,5*10^-2 V -> mV",
+  "8,2*10^-8 s -> ns",
+  "6,8*10^-5 F -> \u00b5F",
+  "9,1*10^2 W -> kW",
+  "4,7*10^4 \u03a9 -> M\u03a9",
   "0,00047 F -> \u00b5F",
   "68000 pF -> \u00b5F",
   "1250000 \u03a9 -> M\u03a9",
@@ -266,7 +294,6 @@ const TSTUFEN = [
   "45600 \u00b5V -> V",
   "0,00902 A -> \u00b5A",
   "3,3 km -> cm",
-  "0,5 mm -> \u00b5m",
   "125000 mm -> km",
   "0,00075 MPa -> Pa",
 ]},
@@ -278,16 +305,19 @@ if (typeof module !== 'undefined') module.exports = { TSTUFEN };
 (function () {
   'use strict';
   const $ = id => document.getElementById(id);
-  const sel = $('taskSel'), treppe = $('treppe'), band = $('band');
-  const zaehler = $('zaehler'), banner = $('banner');
-  const bLinks = $('bLinks'), bRechts = $('bRechts'), bReset = $('bReset'),
-        bPruef = $('bPruef');
+  const sel = $('taskSel'), treppe = $('treppe'), ablauf = $('ablauf'),
+        banner = $('banner'), bandzone = $('bandzone'), band = $('band'),
+        bandtext = $('bandtext');
 
-  let task = null, k = 0, geloest = false, letzteNeu = 0;
+  let task = null, stufeId = 's0', phase = 0, animTimer = null;
 
   // ---------- Aufgabenwahl ----------
   const GRUPPEN = TSTUFEN.map((s, gi) => ({ name: s.name, aufgaben: s.aufgaben,
     prefix: 's' + gi }));
+  function labelAufgabe(a) {
+    return a.replace(/\*10\^(-?[0-9]+)/, (m, p) => '\u00b710' + hoch(p))
+            .replace('->', '\u2192');
+  }
   function buildSelect(keepId) {
     sel.innerHTML = '';
     GRUPPEN.forEach(g => {
@@ -296,7 +326,7 @@ if (typeof module !== 'undefined') module.exports = { TSTUFEN };
       g.aufgaben.forEach((a, i) => {
         const o = document.createElement('option');
         o.value = g.prefix + '-' + i;
-        o.textContent = a.replace('->', '\u2192');
+        o.textContent = labelAufgabe(a);
         grp.appendChild(o);
       });
       sel.appendChild(grp);
@@ -331,58 +361,45 @@ if (typeof module !== 'undefined') module.exports = { TSTUFEN };
     gotoTask(ids[Math.floor(Math.random() * ids.length)]);
   }
 
-  // ---------- Treppe zeichnen ----------
+  // ---------- Treppe (Nachschlagewerk) ----------
   let stufenPos = [];
   function drawTreppe() {
     treppe.innerHTML = '';
     stufenPos = [];
     const L = TREPPEN[task.fam];
+    const mitPotenzen = stufeId !== 's0';       // Stufe 1 bleibt nackt
     const breite = treppe.clientWidth || 600;
     const n = L.length;
-    const w = Math.min(86, Math.floor((breite - 8) / n) - 6);
-    const h = 34, fall = 16;
-    treppe.style.height = (h + fall * (n - 1) + 26) + 'px';
-    const basis = task.fam === 'len' ? '' :
-      (UNIT[task.von] ? UNIT[task.von].basis : '');
+    const w = Math.min(90, Math.floor((breite - 8) / n) - 5);
+    const h = mitPotenzen ? 46 : 34, fall = 15;
+    treppe.style.height = (h + fall * (n - 1) + 14) + 'px';
+    const basis = task.fam === 'len' ? '' : UNIT[task.von].basis;
     L.forEach((st, i) => {
       const d = document.createElement('div');
       d.className = 'stufe';
       const label = task.fam === 'len' ? st.p : (st.p + basis);
-      d.textContent = label;
+      d.innerHTML = label + (mitPotenzen
+        ? '<span class="pot">10' + hoch(st.e) + '</span>' : '');
       const x = Math.round(i * (breite - w) / (n - 1));
-      const y = 10 + i * fall;
+      const y = 6 + i * fall;
       d.style.left = x + 'px'; d.style.top = y + 'px';
       d.style.width = w + 'px'; d.style.height = h + 'px';
-      if (label === labelVon()) d.classList.add('von');
-      if (label === labelNach()) { d.classList.add('ziel'); d.title = 'Ziel'; }
+      if (label === task.von) { d.classList.add('von'); d.title = 'Start'; }
+      if (label === task.nach) { d.classList.add('ziel'); d.title = 'Ziel'; }
       treppe.appendChild(d);
-      stufenPos.push({ e: st.e, x: x + w / 2, y: y + h / 2 });
-      if (i < n - 1) {
-        const kd = document.createElement('div');
-        kd.className = 'kante';
-        kd.textContent = (st.e - L[i + 1].e) + '';
-        kd.style.left = Math.round((x + w + i1x(i, breite, w, n)) / 2 - 3) + 'px';
-        kd.style.top = (y + h + 1) + 'px';
-        treppe.appendChild(kd);
-      }
+      stufenPos.push({ e: st.e, x: x + w / 2, y: y - 10 });
     });
     const m = document.createElement('div');
     m.id = 'marker';
     treppe.appendChild(m);
-    setMarker();
   }
-  function i1x(i, breite, w, n) { return Math.round((i + 1) * (breite - w) / (n - 1)); }
-  function labelVon() { return task.fam === 'len' ? task.von : task.von; }
-  function labelNach() { return task.fam === 'len' ? task.nach : task.nach; }
-  function setMarker() {
+  function markerZu(exp) {
     const m = $('marker');
     if (!m || !stufenPos.length) return;
-    const exp = UNIT[task.von].e - k;
     let x = stufenPos[0].x, y = stufenPos[0].y;
-    if (exp >= stufenPos[0].e) { /* oben festhalten */ }
-    else if (exp <= stufenPos[stufenPos.length - 1].e) {
-      x = stufenPos[stufenPos.length - 1].x; y = stufenPos[stufenPos.length - 1].y;
-    } else {
+    const letzte = stufenPos[stufenPos.length - 1];
+    if (exp <= letzte.e) { x = letzte.x; y = letzte.y; }
+    else if (exp < stufenPos[0].e) {
       for (let i = 0; i < stufenPos.length - 1; i++) {
         const A = stufenPos[i], B = stufenPos[i + 1];
         if (exp <= A.e && exp >= B.e) {
@@ -392,76 +409,189 @@ if (typeof module !== 'undefined') module.exports = { TSTUFEN };
         }
       }
     }
-    m.style.left = (x - 8) + 'px';
-    m.style.top = (y - 8 - 14) + 'px';
+    m.style.display = 'block';
+    m.style.left = (x - 7.5) + 'px';
+    m.style.top = (y - 7.5) + 'px';
   }
 
-  // ---------- Ziffernband ----------
-  function drawBand() {
+  // ---------- Denkkette ----------
+  const FERTIGTEXTE = [];
+  function fertigZeile(text) {
+    const d = document.createElement('div');
+    d.className = 'fertig';
+    d.innerHTML = '<span class="hak">\u2714</span><span>' + text + '</span>';
+    ablauf.appendChild(d);
+  }
+  function frageBlock(inner) {
+    const d = document.createElement('div');
+    d.className = 'schritt';
+    d.innerHTML = inner + '<div class="hinweis"></div>';
+    ablauf.appendChild(d);
+    return d;
+  }
+  function hinweis(block, text) {
+    const h = block.querySelector('.hinweis');
+    h.textContent = text;
+    h.classList.add('zeig');
+  }
+
+  function zeigePhase() {
+    // fertige Schritte neu zeichnen
+    ablauf.innerHTML = '';
+    FERTIGTEXTE.forEach(fertigZeile);
+    if (phase === 0) {
+      const b = frageBlock(
+        '<div class="frage">Von <b>' + task.von + '</b> nach <b>' + task.nach +
+        '</b>: Wird die <b>Einheit</b> gr\u00f6\u00dfer oder kleiner?</div>' +
+        '<div class="wahl"><button data-w="g">gr\u00f6\u00dfer</button>' +
+        '<button data-w="k">kleiner</button></div>');
+      b.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        const richtig = (btn.dataset.w === 'k') === task.einheitKleiner;
+        if (richtig) {
+          FERTIGTEXTE.push('Die Einheit wird <b>' +
+            (task.einheitKleiner ? 'kleiner' : 'gr\u00f6\u00dfer') + '</b>.');
+          phase = 1; zeigePhase();
+        } else {
+          hinweis(b, 'Schau auf die Treppe: Liegt das gr\u00fcn markierte Ziel weiter oben (gr\u00f6\u00dfer) oder weiter unten (kleiner)?');
+        }
+      }));
+    } else if (phase === 1) {
+      const b = frageBlock(
+        '<div class="frage">Die Einheit wird ' +
+        (task.einheitKleiner ? 'kleiner' : 'gr\u00f6\u00dfer') +
+        '. Wird die <b>Zahl</b> dann gr\u00f6\u00dfer oder kleiner?</div>' +
+        '<div class="wahl"><button data-w="g">gr\u00f6\u00dfer</button>' +
+        '<button data-w="k">kleiner</button></div>');
+      b.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        const zahlGroesser = task.soll > 0;
+        const richtig = (btn.dataset.w === 'g') === zahlGroesser;
+        if (richtig) {
+          FERTIGTEXTE.push('Die Zahl wird <b>' +
+            (zahlGroesser ? 'gr\u00f6\u00dfer' : 'kleiner') + '</b> \u2013 genau umgekehrt zur Einheit.');
+          phase = 2; zeigePhase();
+        } else {
+          hinweis(b, 'Denk an ein Beispiel: 1 m in cm \u2013 wird aus der 1 mehr oder weniger? Einheit und Zahl laufen immer gegenl\u00e4ufig.');
+        }
+      }));
+    } else if (phase === 2) {
+      let tasten = '';
+      for (let i = 1; i <= 9; i++) tasten += '<button data-n="' + i + '">' + i + '</button>';
+      const b = frageBlock(
+        '<div class="frage">Um <b>wie viele Stellen</b> wandern die Ziffern?</div>' +
+        '<div class="stellen">' + tasten + '</div>');
+      b.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        if (parseInt(btn.dataset.n, 10) === Math.abs(task.soll)) {
+          FERTIGTEXTE.push('<b>' + Math.abs(task.soll) + ' Stellen</b>' +
+            (task.pot ? ' \u2013 Zehnerpotenz mitgerechnet.' : '.'));
+          phase = 3; zeigePhase();
+        } else {
+          hinweis(b, stufeId === 's0'
+            ? 'Eine Stufe auf dieser Treppe sind drei Stellen.'
+            : (task.pot
+              ? 'Erst die Hochzahlen der Treppe vergleichen, dann die Zehnerpotenz aus der Aufgabe dazurechnen.'
+              : 'Vergleich die Hochzahlen an Start und Ziel \u2013 der Unterschied ist die Stellenzahl.'));
+        }
+      }));
+    } else if (phase === 3) {
+      const b = frageBlock(
+        '<div class="frage">Schreib das Ergebnis in <b>' + task.nach + '</b>:</div>' +
+        '<input id="erg" inputmode="none" autocomplete="off" placeholder="Ergebnis">' +
+        '<div id="pad">' +
+        '<button>7</button><button>8</button><button>9</button><button class="del" data-k="back">\u232b</button>' +
+        '<button>4</button><button>5</button><button>6</button><button class="del" data-k="clr">leeren</button>' +
+        '<button>1</button><button>2</button><button>3</button><button data-k="komma">,</button>' +
+        '<button>0</button><button class="go" data-k="go">Pr\u00fcfen</button>' +
+        '</div>');
+      const inp = b.querySelector('#erg');
+      inp.focus();
+      b.querySelectorAll('#pad button').forEach(btn => {
+        btn.addEventListener('mousedown', ev => ev.preventDefault());
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.k;
+          if (k === 'back') inp.value = inp.value.slice(0, -1);
+          else if (k === 'clr') inp.value = '';
+          else if (k === 'komma') { if (!inp.value.includes(',')) inp.value += inp.value ? ',' : '0,'; }
+          else if (k === 'go') pruefeErgebnis(b, inp);
+          else inp.value += btn.textContent;
+          if (k !== 'go') inp.focus();
+        });
+      });
+      inp.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') { pruefeErgebnis(b, inp); ev.preventDefault(); }
+      });
+    }
+  }
+
+  function pruefeErgebnis(block, inp) {
+    const soll = alsText(schiebe(task.wert, task.soll));
+    let ist;
+    try { ist = normAntwort(inp.value); }
+    catch (e) {
+      hinweis(block, 'Die Zahl kann ich nicht lesen \u2013 nur Ziffern und ein Komma.');
+      return;
+    }
+    if (ist === soll) {
+      FERTIGTEXTE.push('Ergebnis: <b>' + gruppiert(schiebe(task.wert, task.soll)) +
+        '\u2009' + task.nach + '</b>');
+      phase = 4; zeigePhase();
+      sagOk();
+      spieleAufloesung();
+    } else {
+      const sigSoll = soll.replace(/[,]/g, '').replace(/^0+|0+$/g, '');
+      const sigIst = ist.replace(/[,]/g, '').replace(/^0+|0+$/g, '');
+      hinweis(block, sigSoll === sigIst
+        ? 'Die Ziffernfolge stimmt \u2013 nur die Stellen sitzen noch falsch. Nutz deine Antwort aus Schritt 3: ' +
+          Math.abs(task.soll) + ' Stellen nach ' + (task.soll > 0 ? 'links.' : 'rechts.')
+        : 'Pr\u00fcf die Ziffern: Ausgangszahl ist ' + anzeigeWert(task) + '. Beim Wandern kommen nur Nullen dazu oder fallen weg.');
+    }
+  }
+
+  function sagOk() {
+    banner.className = 'banner ok';
+    banner.innerHTML = '<b>\u2714 Richtig!</b> ' + anzeigeWert(task) + '\u2009' + task.von +
+      ' = ' + gruppiert(schiebe(task.wert, task.soll)) + '\u2009' + task.nach +
+      '<br><button class="bbtn gruen" id="bNext">N\u00e4chste Aufgabe \u279c</button>' +
+      '<button class="bbtn" id="bRandS">\u{1f3b2} Zufall \u2013 gleiche Stufe</button>' +
+      '<button class="bbtn" id="bRandA">\u{1f3b2} Zufall \u2013 alle Stufen</button>';
+  }
+
+  // ---------- Aufloesung: Zahlen wandern durchs feste Komma ----------
+  function drawBand(k) {
     const z = schiebe(task.wert, k);
-    const int = alsText(z).split(',')[0];
-    const frac = (alsText(z).split(',')[1] || '');
+    const teile = alsText(z).split(',');
+    const int = teile[0], frac = teile[1] || '';
     band.innerHTML = '';
     const bi = document.createElement('div'); bi.className = 'bint';
     const bf = document.createElement('div'); bf.className = 'bfrac';
     int.split('').forEach((c, i) => {
       const d = document.createElement('div'); d.className = 'zif';
       if ((int.length - i) % 3 === 0 && i > 0) d.classList.add('gruppe');
-      d.textContent = c;
-      bi.appendChild(d);
+      d.textContent = c; bi.appendChild(d);
     });
     frac.split('').forEach((c, i) => {
       const d = document.createElement('div'); d.className = 'zif';
       if (i > 0 && i % 3 === 0) d.classList.add('gruppe');
-      d.textContent = c;
-      bf.appendChild(d);
+      d.textContent = c; bf.appendChild(d);
     });
     const anker = document.createElement('div');
     anker.id = 'anker';
     if (frac) anker.innerHTML = '<span class="kglyph">,</span>';
     band.appendChild(bi); band.appendChild(anker); band.appendChild(bf);
-    // frisch hereingewanderte Nullen markieren
-    if (letzteNeu > 0) {
-      const zellen = letzteNeu > 0 && k > 0
-        ? [...bi.children].slice(-letzteNeu)
-        : [];
-      zellen.forEach(d => d.classList.add('neu'));
-    }
-    zaehler.textContent = k === 0 ? 'Noch nicht geschoben.'
-      : Math.abs(k) + (Math.abs(k) === 1 ? ' Stelle' : ' Stellen') +
-        (k > 0 ? ' nach links' : ' nach rechts') + ' geschoben.';
   }
-
-  function schiebeUm(richtung) {
-    if (geloest) return;
-    letzteNeu = richtung > 0 ? 1 : 0;
-    k += richtung;
-    quiet();
-    drawBand(); setMarker();
-  }
-
-  // ---------- Pruefen ----------
-  function say(cls, html) { banner.className = 'banner ' + cls; banner.innerHTML = html; }
-  function quiet() { banner.className = 'banner'; banner.innerHTML = ''; }
-  function pruefen() {
-    if (geloest) return;
-    if (k === task.soll) {
-      geloest = true;
-      const erg = gruppiert(schiebe(task.wert, k));
-      say('ok', '<b>&#10004; Richtig!</b> ' +
-        gruppiert(task.wert) + '\u2009' + task.von + ' = ' +
-        erg + '\u2009' + task.nach +
-        '<br><button class="bbtn gruen" id="bNext">N\u00e4chste Aufgabe \u279c</button>' +
-        '<button class="bbtn" id="bRandS">\u{1f3b2} Zufall \u2013 gleiche Stufe</button>' +
-        '<button class="bbtn" id="bRandA">\u{1f3b2} Zufall \u2013 alle Stufen</button>');
-      bLinks.disabled = bRechts.disabled = bReset.disabled = bPruef.disabled = true;
-    } else if (k === 0) {
-      say('warn', 'Du hast noch nicht geschoben. Schau auf die Treppe: Geht es zum Ziel hinauf oder hinab?');
-    } else if ((k > 0) !== (task.soll > 0)) {
-      say('err', '<b>Richtung pr\u00fcfen:</b> Geht es auf der Treppe zu einer kleineren Einheit (Zahlen nach links) oder zu einer gr\u00f6\u00dferen (Zahlen nach rechts)?');
-    } else {
-      say('err', '<b>Die Richtung stimmt schon!</b> Z\u00e4hl die Stellen an den Stufenkanten nach \u2013 der Punkt auf der Treppe zeigt, wo du gerade stehst.');
-    }
+  function spieleAufloesung() {
+    bandzone.style.display = 'block';
+    const reduziert = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let k = 0;
+    drawBand(0); markerZu(task.pot + task.eVon);
+    bandtext.textContent = 'So wandern die Zahlen \u2013 das Komma steht fest:';
+    if (reduziert) { drawBand(task.soll); markerZu(task.eNach); return; }
+    const schrittweite = task.soll > 0 ? 1 : -1;
+    animTimer = setInterval(() => {
+      k += schrittweite;
+      drawBand(k);
+      markerZu(task.pot + task.eVon - k);
+      if (k === task.soll) { clearInterval(animTimer); animTimer = null; }
+    }, 450);
   }
 
   banner.addEventListener('click', ev => {
@@ -472,26 +602,26 @@ if (typeof module !== 'undefined') module.exports = { TSTUFEN };
 
   // ---------- Start ----------
   function start() {
+    if (animTimer) { clearInterval(animTimer); animTimer = null; }
     task = parseAufgabe(taskById(sel.value));
-    k = 0; geloest = false; letzteNeu = 0;
-    bLinks.disabled = bRechts.disabled = bReset.disabled = bPruef.disabled = false;
-    $('aufgabe').innerHTML = gruppiert(task.wert) + '\u2009' + task.von +
-      ' = <b>?</b>\u2009' + task.nach;
-    quiet();
-    drawTreppe(); drawBand();
+    stufeId = stageOf(sel.value);
+    phase = 0;
+    FERTIGTEXTE.length = 0;
+    banner.className = 'banner'; banner.innerHTML = '';
+    bandzone.style.display = 'none';
+    $('aufgabe').innerHTML = anzeigeWert(task).replace(/10(\u207b?[\u2070-\u2079]+)/,
+      '10$1') + '\u2009' + task.von + ' = <b>?</b>\u2009' + task.nach;
+    drawTreppe();
+    $('marker').style.display = 'none';
+    zeigePhase();
   }
 
-  bLinks.addEventListener('click', () => schiebeUm(1));
-  bRechts.addEventListener('click', () => schiebeUm(-1));
-  bReset.addEventListener('click', () => { k = 0; letzteNeu = 0; quiet(); drawBand(); setMarker(); });
-  bPruef.addEventListener('click', pruefen);
   $('btnNeu').addEventListener('click', start);
   sel.addEventListener('change', start);
-  window.addEventListener('resize', () => { if (task) { drawTreppe(); } });
-  document.addEventListener('keydown', ev => {
-    if (ev.key === 'ArrowLeft') { schiebeUm(1); ev.preventDefault(); }
-    if (ev.key === 'ArrowRight') { schiebeUm(-1); ev.preventDefault(); }
-    if (ev.key === 'Enter') pruefen();
+  window.addEventListener('resize', () => {
+    if (!task) return;
+    drawTreppe();
+    if (phase === 4) markerZu(task.eNach);
   });
 
   buildSelect(null);
