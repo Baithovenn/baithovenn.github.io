@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Die Waage &ndash; Formeln umstellen</title>
+<style>
+  :root {
+    --hblue: #00468c; --hbg: #ebf2fa; --hgruen: #146e3c; --gruenbg: #eaf6ee;
+    --warnrot: #aa1e1e; --warnbg: #fcebe9; --orange: #b36b00; --orangebg: #fdf3e3;
+    --tilt: 0deg;
+    --colside: 150px;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; margin: 0;
+    background: #f7f8fa; color: #1a1a1a; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 10px 14px 30px; }
+  h1 { color: var(--hblue); font-size: 1.45rem; margin: 6px 0 2px; }
+  .sub { color: #555; margin: 0 0 12px; font-size: 0.95rem; }
+
+  .app { display: grid; grid-template-columns: 340px 1fr; gap: 18px;
+    grid-template-areas: "top main" "kbd main" "tip main"; align-content: start; }
+  #sideTop { grid-area: top; }
+  #kbdwrap { grid-area: kbd; }
+  #tipwrap { grid-area: tip; }
+  #main { grid-area: main; min-width: 0; }
+
+  select, button {
+    font-family: inherit; font-size: 1.02rem; padding: 10px 12px;
+    border-radius: 8px; border: 1.5px solid var(--hblue); background: white;
+    color: var(--hblue); cursor: pointer; min-height: 48px;
+  }
+  button:active { background: var(--hbg); }
+  #taskSel { width: 100%; margin-bottom: 8px; }
+  .btnrow { display: flex; gap: 8px; }
+  .btnrow button { flex: 1; }
+  #schwerRow { display: flex; align-items: center; gap: 8px; margin-top: 8px;
+    color: var(--hblue); font-size: 1.0rem; cursor: pointer; user-select: none; }
+  #schwerRow input { width: 22px; height: 22px; accent-color: var(--hblue); }
+
+  #kbdwrap { margin-top: 12px; }
+  #kVars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 8px; }
+  .krow { display: flex; gap: 6px; margin-bottom: 6px; }
+  .key { flex: 1; min-height: 50px; font-size: 1.25rem;
+    border: 1.5px solid #b9c6d6; border-radius: 8px; background: white;
+    color: #1a1a1a; cursor: pointer; font-family: inherit; padding: 0; }
+  .key:active { background: var(--hbg); }
+  .key.op { background: var(--hbg); color: var(--hblue); font-weight: bold; }
+  .key.del { background: var(--warnbg); color: var(--warnrot); }
+
+  #tipwrap details { margin-top: 12px; background: var(--hbg);
+    border: 1.5px solid var(--hblue); border-radius: 10px; padding: 10px 14px; }
+  summary { color: var(--hblue); font-weight: bold; cursor: pointer; }
+  #tipwrap ol { margin: 8px 0 4px; padding-left: 20px; }
+  #tipwrap li { margin-bottom: 5px; }
+
+  #waageOuter { display: flex; justify-content: center; }
+  #waageBox { position: relative; height: 150px; width: 560px; max-width: 100%;
+    opacity: 0.4; transform: scale(0.82); transform-origin: top center;
+    transition: opacity 0.5s, transform 0.5s; }
+  #waageBox.wach { opacity: 1; transform: scale(1); }
+  #arm { position: absolute; left: 50%; top: 44px; width: 84%; height: 6px;
+    background: var(--hblue); border-radius: 4px;
+    transform: translateX(-50%) rotate(var(--tilt));
+    transition: transform 0.7s cubic-bezier(.34,1.4,.44,1), background 0.3s; }
+  .panw { position: absolute; top: 3px; width: 0;
+    transform: rotate(calc(var(--tilt) * -1));
+    transition: transform 0.7s cubic-bezier(.34,1.4,.44,1); }
+  #panwL { left: 0; } #panwR { right: 0; }
+  .pan { position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    min-width: 110px; max-width: 240px;
+    background: white; border: 2px solid var(--hblue); border-radius: 10px;
+    padding: 9px 12px; text-align: center; font-size: 1.15rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08); white-space: nowrap;
+    transition: border-color 0.3s, box-shadow 0.3s; }
+  .panstr { position: absolute; top: 0; left: 50%; width: 2px; height: 10px;
+    background: var(--hblue); }
+  #fulcrum { position: absolute; left: 50%; top: 47px; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 18px solid transparent;
+    border-right: 18px solid transparent; border-bottom: 32px solid #9aa7b5; }
+  #eqsign { position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+    font-size: 1.5rem; font-weight: bold; color: var(--hblue); }
+  #waageBox.gut #arm { background: var(--hgruen); }
+  #waageBox.gut .pan { border-color: var(--hgruen);
+    box-shadow: 0 0 14px rgba(20,110,60,0.55); }
+  #waageBox.schlecht #arm { background: var(--warnrot); }
+  #waageBox.schlecht .pan { border-color: var(--warnrot);
+    box-shadow: 0 0 14px rgba(170,30,30,0.45); }
+  @keyframes nod { 0%{transform:translateX(-50%) rotate(0)}
+    30%{transform:translateX(-50%) rotate(1.8deg)}
+    60%{transform:translateX(-50%) rotate(-1.3deg)}
+    100%{transform:translateX(-50%) rotate(0)} }
+  #arm.nod { animation: nod 0.7s ease; }
+
+  #karte { background: white; border: 2px solid var(--hblue); border-radius: 14px;
+    padding: 14px 16px 16px; margin-top: 6px; }
+  #karte h2 { color: var(--hblue); font-size: 1.1rem; margin: 0 0 10px;
+    border-bottom: 1.5px solid var(--hbg); padding-bottom: 6px; }
+  #karte h2 #zielInfo { font-weight: normal; color: #333; }
+
+  .eqgrid { display: grid; align-items: center;
+    grid-template-columns: var(--colside) 1fr 40px 1fr var(--colside); }
+  .eqgrid .cL { text-align: right; min-width: 0; }
+  .eqgrid .cEq { text-align: center; font-weight: bold; color: var(--hblue);
+    font-size: 1.35rem; }
+  .eqgrid .cR { text-align: left; min-width: 0; }
+  .eqgrid .cMark { text-align: center; }
+  .eqgrid .cOp { text-align: left; padding-left: 8px; font-size: 1.05rem;
+    color: var(--hgruen); border-left: 1.5px dashed #c6d2df; min-height: 1.4em;
+    overflow-wrap: break-word; }
+  .eqgrid .cOp:empty { border-left-color: transparent; }
+  .eqgrid .cOp.hasop::before { content: "| "; color: #999; }
+
+  .zeile { padding: 6px 0; font-size: 1.28rem; }
+  .zeile .cMark { color: var(--hgruen); font-size: 1.25rem; }
+  .zeile .start { color: #888; font-size: 0.85rem; }
+  .zeile.cur { background: #f2f7fc; border-radius: 8px; }
+
+  #next { margin-top: 8px; padding: 10px 0 4px; background: var(--hbg);
+    border-radius: 10px; border: 1.5px dashed var(--hblue); }
+  #next .cMark { color: var(--hgruen); font-weight: bold; font-size: 1.0rem; }
+  #next input { font-family: inherit; font-size: 1.25rem; padding: 9px;
+    border: 1.5px solid #b9c6d6; border-radius: 8px; min-height: 48px;
+    width: 100%; background: white; }
+  #next input:focus { outline: 2px solid var(--hblue); }
+  #next input.bad { border-color: var(--warnrot); outline: 2px solid var(--warnrot); }
+  #inL { text-align: right; }
+  #inOp { border-style: dashed; margin-left: 6px; width: calc(100% - 12px); }
+  #prevrow { color: #667; }
+  #prevgrid { font-size: 1.15rem; padding: 6px 0 2px; min-height: 2em; color: #667; }
+  .dim { color: #aab; font-size: 0.9rem; }
+  #checkrow { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+  #btnCheck { background: var(--hblue); color: white; font-weight: bold;
+    font-size: 1.15rem; padding: 12px 34px; }
+  #btnCheck:active { background: #003268; }
+  #zielrow { display: none; justify-content: center; align-items: center;
+    gap: 8px; margin-top: 8px; }
+  #inZiel { width: 90px; font-size: 1.2rem; padding: 8px; min-height: 44px;
+    border: 1.5px solid #b9c6d6; border-radius: 8px; font-family: inherit; }
+
+  #banner { display: none; margin-top: 10px; padding: 12px 14px;
+    border-radius: 10px; font-size: 1.08rem; border: 2px solid; }
+  #banner.ok   { display: block; background: var(--gruenbg);
+    border-color: var(--hgruen); color: var(--hgruen); }
+  #banner.err  { display: block; background: var(--warnbg);
+    border-color: var(--warnrot); color: var(--warnrot); }
+  #banner.warn { display: block; background: var(--orangebg);
+    border-color: var(--orange); color: var(--orange); }
+  #banner .bbtn { margin: 8px 8px 0 0; background: var(--hgruen); color: white;
+    border-color: var(--hgruen); font-weight: bold; }
+  #banner .bbtn.zufall { background: white; color: var(--hgruen); }
+
+  .frac { display: inline-flex; flex-direction: column; vertical-align: middle;
+    text-align: center; margin: 0 3px; }
+  .fn { padding: 0 5px 2px; border-bottom: 1.6px solid currentColor; }
+  .fd { padding: 2px 5px 0; }
+  .sqrt { display: inline-flex; align-items: stretch; vertical-align: middle; }
+  .rad { font-size: 1.25em; line-height: 1; align-self: flex-end; }
+  .rbar { border-top: 1.6px solid currentColor; padding: 1px 4px 0 2px; }
+  i { font-style: italic; }
+  sub, sup { font-size: 0.72em; }
+
+  footer { margin-top: 18px; color: #999; font-size: 0.85rem; }
+
+  @media (max-width: 820px) {
+    :root { --colside: 84px; }
+    .app { grid-template-columns: 1fr;
+      grid-template-areas: "top" "main" "tip" "kbd"; gap: 12px; }
+    #kbdwrap { position: sticky; bottom: 0; background: #f7f8fa;
+      padding: 8px 0 6px; margin-top: 0;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 5; }
+    #kVars { grid-template-columns: repeat(8, 1fr); }
+    .key { min-height: 44px; font-size: 1.1rem; }
+    #waageBox { height: 130px; }
+    .zeile { font-size: 1.15rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Die Waage &ndash; Formeln umstellen</h1>
+  <p class="sub">Was du links machst, musst du auch rechts machen &ndash; sonst kippt die Waage.</p>
+
+  <div class="app">
+
+    <div id="sideTop">
+      <select id="taskSel"></select>
+      <div class="btnrow">
+        <button id="btnNeu">Neu</button>
+        <button id="btnUndo">Schritt zur&uuml;ck</button>
+      </div>
+      <label id="schwerRow"><input type="checkbox" id="chkSchwer">
+        Extra schwer freischalten</label>
+    </div>
+
+    <div id="kbdwrap">
+      <div id="kVars"></div>
+      <div class="krow">
+        <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+        <button class="key op">&middot;</button><button class="key op">(</button>
+        <button class="key op">)</button>
+      </div>
+      <div class="krow">
+        <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+        <button class="key op">:</button><button class="key op">&sup2;</button>
+        <button class="key op" id="kSqrt">&radic;(</button>
+      </div>
+      <div class="krow">
+        <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+        <button class="key op">+</button><button class="key op">&minus;</button>
+        <button class="key">,</button>
+      </div>
+      <div class="krow">
+        <button class="key">0</button>
+        <button class="key op">&pi;</button>
+        <button class="key op">e</button>
+        <button class="key op" id="kLn">ln(</button>
+        <button class="key op">^</button>
+      </div>
+      <div class="krow">
+        <button class="key del" id="kDel">&#9003;</button>
+        <button class="key del" id="kClr">leeren</button>
+      </div>
+    </div>
+
+    <div id="tipwrap">
+      <details>
+        <summary>Tipp: Reihenfolge beim Umstellen</summary>
+        <ol>
+          <li><b>Klammern</b> sind ein Paket &ndash; erst alles andere wegr&auml;umen.</li>
+          <li>Zuerst <b>+ und &minus;</b> auf die andere Seite.</li>
+          <li>Dann <b>&middot; und :</b> .</li>
+          <li>Steht <i>x</i>&sup2; allein &rarr; <b>Wurzel</b> ziehen.</li>
+        </ol>
+        Am | Strich: <b>+</b>&hellip;, <b>&minus;</b>&hellip;, <b>&middot;</b>&hellip;,
+        <b>:</b>&hellip;, <b>&sup2;</b>, <b>&radic;</b>, <b>ln</b>, <b>e^</b><br>
+        Gleiche Schritte gehen zusammen: <b>| &minus;R<sub>1</sub> &minus;R<sub>2</sub></b><br>
+        Extra schwer: <b>ln</b> und <b>e^</b> heben sich gegenseitig auf.
+      </details>
+    </div>
+
+    <div id="main">
+
+      <div id="waageOuter">
+        <div id="waageBox">
+          <div id="eqsign">=</div>
+          <div id="arm">
+            <div class="panw" id="panwL"><div class="panstr"></div><div class="pan" id="panL">?</div></div>
+            <div class="panw" id="panwR"><div class="panstr"></div><div class="pan" id="panR">?</div></div>
+          </div>
+          <div id="fulcrum"></div>
+        </div>
+      </div>
+
+      <div id="karte">
+        <h2>Dein Rechenweg <span id="zielInfo"></span></h2>
+        <div id="verlauf"></div>
+
+        <div id="next">
+          <div class="eqgrid">
+            <div class="cMark">n&auml;chster<br>Schritt &#10148;</div>
+            <div class="cL"><input id="inL" inputmode="none" autocomplete="off" placeholder="linke Seite"></div>
+            <div class="cEq">=</div>
+            <div class="cR"><input id="inR" inputmode="none" autocomplete="off" placeholder="rechte Seite"></div>
+            <div class="cOp"><input id="inOp" inputmode="none" autocomplete="off" placeholder=":I"></div>
+          </div>
+          <div class="eqgrid" id="prevgrid">
+            <div class="cMark"></div>
+            <div class="cL" id="pvL"></div>
+            <div class="cEq" style="color:#99a">=</div>
+            <div class="cR" id="pvR"></div>
+            <div class="cOp" id="pvOp"></div>
+          </div>
+          <div id="zielrow">
+            <span>Umstellen nach:</span>
+            <input id="inZiel" inputmode="none" autocomplete="off" placeholder="R">
+            <span class="dim">(leer = frei probieren)</span>
+          </div>
+          <div id="checkrow">
+            <button id="btnCheck">Pr&uuml;fen</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="banner"></div>
+
+      <footer>L&auml;uft offline &middot; pr&uuml;ft jede Zeile numerisch mit Zufallszahlen &middot;
+        keine Daten werden gespeichert oder gesendet</footer>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   ================================================================
+       HIER NEUE AUFGABEN EINTRAGEN
+       Format:  "linke Seite = rechte Seite -> Zielgroesse"
+       Erlaubt: + - * / ^2 Klammern Wurzel(...) ln(...) e pi
+                Variablen wie R1, U2, Rges, X_C
+       Beispiel:  "U = R*I -> R"
+   ================================================================
+   ================================================================ */
+const AUFGABEN = [
+  // ---- A: zwei Groessen (leicht) ----
+  "U = R*I -> R",
+  "U = R*I -> I",
+  "P = U*I -> U",
+  "P = U*I -> I",
+  "Q = I*t -> t",
+  "W = P*t -> P",
+  "s = v*t -> t",
+  "F = m*a -> a",
+  "Q = C*U -> C",
+  "Q = C*U -> U",
+  "\u03c4 = R*C -> C",
+  "M = F*r -> F",
+  // ---- B: Bruch-Form gegeben ----
+  "I = U/R -> U",
+  "I = U/R -> R",
+  "v = s/t -> s",
+  "v = s/t -> t",
+  "R = U/I -> I",
+  "P = W/t -> W",
+  "\u03c1 = m/V -> V",
+  "\u03b7 = Pab/Pzu -> Pab",
+  "\u03b7 = Pab/Pzu -> Pzu",
+  // ---- C: drei und mehr Groessen ----
+  "W = U*I*t -> U",
+  "W = U*I*t -> t",
+  "y = a*b*c -> b",
+  "V = l*b*h -> b",
+  "Xl = 2*\u03c0*f*L -> L",
+  "Xl = 2*\u03c0*f*L -> f",
+  "n = f*60/p -> f",
+  // ---- D: Mal und Geteilt gemischt ----
+  "R = \u03c1*l/A -> l",
+  "R = \u03c1*l/A -> A",
+  "R = \u03c1*l/A -> \u03c1",
+  "f = 1/T -> T",
+  "G = 1/R -> R",
+  // ---- E: plus und minus ----
+  "U0 = U1+U2 -> U2",
+  "I = I1+I2 -> I1",
+  "y = a*x+b -> x",
+  "Rg = R1+R2+R3 -> R2",
+  // ---- F: Klammern (bleiben zusammen!) ----
+  "U = I*(R1+R2) -> R1",
+  "P = U*(I1+I2) -> I2",
+  // ---- G: Quadrat und Wurzel (schwer) ----
+  "P = U^2/R -> R",
+  "P = U^2/R -> U",
+  "P = I^2*R -> R",
+  "P = I^2*R -> I",
+];
+
+/* ================================================================
+       EXTRA SCHWER  (nur sichtbar mit Haken "Extra schwer")
+   ================================================================ */
+const AUFGABEN_PROFI = [
+  // Spannungsteiler
+  "U2 = U*R2/(R1+R2) -> U",
+  "U2 = U*R2/(R1+R2) -> R1",
+  // Transformator
+  "U1/U2 = N1/N2 -> U2",
+  // Blindwiderstaende
+  "Xc = 1/(2*\u03c0*f*C) -> C",
+  "Xc = 1/(2*\u03c0*f*C) -> f",
+  // Parallelschaltung (Ausklammern noetig!)
+  "Rg = R1*R2/(R1+R2) -> R1",
+  // Kondensator laden / entladen (mit ln)
+  "u = U*(1-e^(-t/(R*C))) -> t",
+  "i = I0*e^(-t/\u03c4) -> t",
+];
+/* ================================================================
+   Ende der Aufgaben-Sektion
+   ================================================================ */
+</script>
+
+<script>
+/* ============================================================
+   WAAGE-APP RECHENKERN v3
+   Parser, numerische Auswertung, Schritt-Pruefung, Renderer
+   Neu: Ketten-Operationen am | Strich, Index-Variablen (Rges),
+        Konstanten pi und e, Funktionen ln und lg
+   ============================================================ */
+
+// ---------- Tokenizer ----------
+function tokenize(s) {
+  s = String(s)
+    .replace(/\u00b7|\u00d7/g, '*')
+    .replace(/:|\u00f7/g, '/')
+    .replace(/\u221a/g, '@')
+    .replace(/sqrt/gi, '@')
+    .replace(/\u00b2/g, '^2')
+    .replace(/\u00b3/g, '^3')
+    .replace(/\u2212/g, '-')
+    .replace(/,/g, '.')
+    .replace(/\s+/g, '')
+    .replace(/ln/g, '\u2113')
+    .replace(/lg/g, '\u00a3')
+    .replace(/pi/g, '\u03c0');
+  const toks = [];
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/[0-9.]/.test(c)) {
+      let j = i;
+      while (j < s.length && /[0-9.]/.test(s[j])) j++;
+      const v = parseFloat(s.slice(i, j));
+      if (!isFinite(v)) throw new Error('Zahl kaputt: ' + s.slice(i, j));
+      toks.push({ t: 'num', v: v });
+      i = j; continue;
+    }
+    if (c === '\u03c0') { toks.push({ t: 'const', name: '\u03c0', v: Math.PI }); i++; continue; }
+    if (c === '\u2113') { toks.push({ t: 'ln' }); i++; continue; }
+    if (c === '\u00a3') { toks.push({ t: 'lg' }); i++; continue; }
+    if (/[A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394]/.test(c)) {
+      let j = i + 1;
+      if (/[A-Z\u0394]/.test(c)) {
+        while (j < s.length && /[a-z]/.test(s[j])) j++;
+      }
+      while (j < s.length && /[0-9]/.test(s[j])) j++;
+      if (j < s.length && s[j] === '_') {           // expliziter Index: X_C
+        j++;
+        while (j < s.length && /[A-Za-z0-9]/.test(s[j])) j++;
+      }
+      const name = s.slice(i, j);
+      if (name === 'e') toks.push({ t: 'const', name: 'e', v: Math.E });
+      else toks.push({ t: 'var', v: name });
+      i = j; continue;
+    }
+    if ('+-*/^()@'.includes(c)) { toks.push({ t: c }); i++; continue; }
+    throw new Error('Unbekanntes Zeichen: ' + c);
+  }
+  return toks;
+}
+
+// ---------- Parser ----------
+function parse(str) {
+  if (!str || !String(str).trim()) throw new Error('leer');
+  const T = tokenize(str);
+  let p = 0;
+  const peek = () => T[p];
+
+  function expr() {
+    let n = term();
+    while (peek() && (peek().t === '+' || peek().t === '-')) {
+      const o = T[p++].t;
+      n = { op: o, a: n, b: term() };
+    }
+    return n;
+  }
+  function term() {
+    let n = fact();
+    for (;;) {
+      const t = peek();
+      if (t && (t.t === '*' || t.t === '/')) { p++; n = { op: t.t, a: n, b: fact() }; }
+      else if (t && (t.t === 'num' || t.t === 'var' || t.t === 'const' ||
+                     t.t === '(' || t.t === '@' || t.t === 'ln' || t.t === 'lg')) {
+        n = { op: '*', a: n, b: fact() };
+      }
+      else break;
+    }
+    return n;
+  }
+  function fact() {
+    const t = peek();
+    if (!t) throw new Error('Ausdruck unvollstaendig');
+    if (t.t === '-') { p++; return { op: 'neg', a: fact() }; }
+    if (t.t === '+') { p++; return fact(); }
+    return pw();
+  }
+  function pw() {
+    const base = atom();
+    if (peek() && peek().t === '^') { p++; return { op: '^', a: base, b: fact() }; }
+    return base;
+  }
+  function atom() {
+    const t = peek();
+    if (!t) throw new Error('Ausdruck unvollstaendig');
+    if (t.t === 'num') { p++; return { op: 'num', v: t.v }; }
+    if (t.t === 'const') { p++; return { op: 'const', name: t.name, v: t.v }; }
+    if (t.t === 'var') { p++; return { op: 'var', v: t.v }; }
+    if (t.t === '(') {
+      p++;
+      const n = expr();
+      if (!peek() || peek().t !== ')') throw new Error('Klammer zu fehlt: )');
+      p++;
+      return n;
+    }
+    if (t.t === '@') { p++; return { op: 'sqrt', a: pw() }; }
+    if (t.t === 'ln') { p++; return { op: 'ln', a: pw() }; }
+    if (t.t === 'lg') { p++; return { op: 'lg', a: pw() }; }
+    throw new Error('Unerwartetes Zeichen');
+  }
+
+  const n = expr();
+  if (p < T.length) throw new Error('Da steht zu viel am Ende');
+  return n;
+}
+
+// ---------- Auswertung ----------
+function evalAST(n, env) {
+  switch (n.op) {
+    case 'num': return n.v;
+    case 'const': return n.v;
+    case 'var': return (n.v in env) ? env[n.v] : NaN;
+    case '+': return evalAST(n.a, env) + evalAST(n.b, env);
+    case '-': return evalAST(n.a, env) - evalAST(n.b, env);
+    case '*': return evalAST(n.a, env) * evalAST(n.b, env);
+    case '/': { const d = evalAST(n.b, env); return d === 0 ? NaN : evalAST(n.a, env) / d; }
+    case '^': return Math.pow(evalAST(n.a, env), evalAST(n.b, env));
+    case 'neg': return -evalAST(n.a, env);
+    case 'sqrt': { const v = evalAST(n.a, env); return v < 0 ? NaN : Math.sqrt(v); }
+    case 'ln': { const v = evalAST(n.a, env); return v <= 0 ? NaN : Math.log(v); }
+    case 'lg': { const v = evalAST(n.a, env); return v <= 0 ? NaN : Math.log10(v); }
+  }
+  return NaN;
+}
+
+function collectVars(n, set) {
+  set = set || new Set();
+  if (!n) return set;
+  if (n.op === 'var') set.add(n.v);
+  if (n.a) collectVars(n.a, set);
+  if (n.b) collectVars(n.b, set);
+  return set;
+}
+
+// ---------- Numerische Vergleiche ----------
+function sampleEnvs(varSet, K) {
+  K = K || 18;
+  const vars = Array.from(varSet);
+  const envs = [];
+  for (let k = 0; k < K; k++) {
+    const e = {};
+    for (const v of vars) e[v] = 0.7 + Math.random() * 7.3;
+    envs.push(e);
+  }
+  return envs;
+}
+
+function approxEq(a, b) {
+  if (!isFinite(a) || !isFinite(b)) return null;
+  return Math.abs(a - b) <= 1e-7 * Math.max(1, Math.abs(a), Math.abs(b));
+}
+
+// Adaptiv: sampelt nach, bis genug gueltige Stichproben da sind
+function agreeVars(f1, f2, varSet) {
+  const vars = Array.from(varSet);
+  let valid = 0;
+  for (let k = 0; k < 90; k++) {
+    const e = {};
+    for (const v of vars) e[v] = 0.7 + Math.random() * 7.3;
+    const r = approxEq(f1(e), f2(e));
+    if (r === null) continue;
+    if (!r) return false;
+    valid++;
+    if (valid >= 8) return true;
+  }
+  return valid >= 3;
+}
+
+function agreeOnSamples(f1, f2, envs) {
+  let valid = 0;
+  for (const e of envs) {
+    const r = approxEq(f1(e), f2(e));
+    if (r === null) continue;
+    if (!r) return false;
+    valid++;
+  }
+  return valid >= 5;
+}
+
+// ---------- Operationen am | Strich (auch als Kette) ----------
+function parseOps(str) {
+  if (!str || !String(str).trim()) return null;
+  let s = String(str).trim()
+    .replace(/\u00b7|\u00d7/g, '*').replace(/:|\u00f7/g, '/')
+    .replace(/\u2212/g, '-').replace(/\u00b2/g, '^2').replace(/\s+/g, '');
+  if (s === '^2' || s === 'hoch2') return [{ k: 'q' }];
+  if (/^(@|\u221a)[()]*$/.test(s) || /^(wurzel|sqrt)$/i.test(s)) return [{ k: 'r' }];
+  if (/^ln[()]*$/i.test(s)) return [{ k: 'ln' }];
+  if (/^lg[()]*$/i.test(s)) return [{ k: 'lg' }];
+  if (/^e\^?$/i.test(s)) return [{ k: 'ex' }];
+
+  if (!'+-*/'.includes(s[0])) {
+    throw new Error('Schritt muss mit +, \u2212, \u00b7, : beginnen (oder \u00b2, \u221a, ln, e^ sein)');
+  }
+  const segs = [];
+  let start = 0, depth = 0;
+  for (let i = 1; i < s.length; i++) {
+    const c = s[i];
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if ((c === '+' || c === '-') && depth === 0) {
+      const prev = s[i - 1];
+      if (!'+-*/^('.includes(prev) && i > start + 1) {
+        segs.push(s.slice(start, i));
+        start = i;
+      }
+    }
+  }
+  segs.push(s.slice(start));
+
+  return segs.map(seg => {
+    const k = seg[0];
+    if (!'+-*/'.includes(k)) throw new Error('Jeder Teilschritt braucht +, \u2212, \u00b7 oder :');
+    const rest = seg.slice(1);
+    if (!rest) throw new Error('Nach dem Rechenzeichen fehlt etwas');
+    return { k: k, e: parse(rest) };
+  });
+}
+
+function applyOpsVal(v, ops, env) {
+  for (const op of ops) {
+    if (op.k === 'q') { v = v * v; continue; }
+    if (op.k === 'r') { v = v < 0 ? NaN : Math.sqrt(v); continue; }
+    if (op.k === 'ln') { v = v <= 0 ? NaN : Math.log(v); continue; }
+    if (op.k === 'lg') { v = v <= 0 ? NaN : Math.log10(v); continue; }
+    if (op.k === 'ex') { v = Math.exp(v); continue; }
+    const w = evalAST(op.e, env);
+    if (op.k === '+') v = v + w;
+    else if (op.k === '-') v = v - w;
+    else if (op.k === '*') v = v * w;
+    else if (op.k === '/') v = (w === 0 ? NaN : v / w);
+  }
+  return v;
+}
+
+// ---------- Schritt pruefen ----------
+function checkStep(prevL, prevR, opStr, newLs, newRs) {
+  let ops = null;
+  try { ops = parseOps(opStr); }
+  catch (err) { return { status: 'syntax', field: 'op', msg: err.message }; }
+
+  let newL, newR;
+  try { newL = parse(newLs); }
+  catch (err) { return { status: 'syntax', field: 'L', msg: err.message }; }
+  try { newR = parse(newRs); }
+  catch (err) { return { status: 'syntax', field: 'R', msg: err.message }; }
+
+  const allVars = new Set();
+  collectVars(prevL, allVars); collectVars(prevR, allVars);
+  collectVars(newL, allVars); collectVars(newR, allVars);
+  if (ops) ops.forEach(o => { if (o.e) collectVars(o.e, allVars); });
+  const envs = sampleEnvs(allVars, 18);
+
+  const fPrevL = e => evalAST(prevL, e);
+  const fPrevR = e => evalAST(prevR, e);
+  const fNewL  = e => evalAST(newL, e);
+  const fNewR  = e => evalAST(newR, e);
+  const fTL = ops ? (e => applyOpsVal(evalAST(prevL, e), ops, e)) : fPrevL;
+  const fTR = ops ? (e => applyOpsVal(evalAST(prevR, e), ops, e)) : fPrevR;
+
+  const eq = (fa, fb) => agreeVars(fa, fb, allVars);
+
+  function tiltDir() {
+    let s = 0, n = 0;
+    for (const e of envs) {
+      const a = fNewL(e), b = fNewR(e);
+      if (isFinite(a) && isFinite(b)) { s += (a - b); n++; }
+    }
+    if (!n) return 1;
+    return s >= 0 ? -1 : 1;
+  }
+
+  if ((eq(fNewL, fTL) && eq(fNewR, fTR)) || (eq(fNewL, fTR) && eq(fNewR, fTL))) {
+    return { status: 'ok', newL: newL, newR: newR };
+  }
+
+  if (ops) {
+    if ((eq(fNewL, fPrevL) && eq(fNewR, fPrevR)) || (eq(fNewL, fPrevR) && eq(fNewR, fPrevL))) {
+      return { status: 'notApplied',
+        msg: 'Du hast den Schritt am | Strich noch nicht angewendet.' };
+    }
+    const oneSide =
+      (eq(fNewL, fPrevL) && eq(fNewR, fTR)) || (eq(fNewL, fTL) && eq(fNewR, fPrevR)) ||
+      (eq(fNewL, fPrevR) && eq(fNewR, fTL)) || (eq(fNewL, fTR) && eq(fNewR, fPrevL));
+    if (oneSide) {
+      return { status: 'einseitig', tilt: tiltDir(),
+        msg: 'Nur auf EINER Seite gerechnet! Die Waage kippt.' };
+    }
+    const caseOk = (function () {
+      try {
+        const pL = lowerVarsAST(prevL), pR = lowerVarsAST(prevR);
+        const nL = lowerVarsAST(newL), nR = lowerVarsAST(newR);
+        const lops = ops.map(o => o.e ? { k: o.k, e: lowerVarsAST(o.e) } : o);
+        const vs = new Set();
+        [pL, pR, nL, nR].forEach(x => collectVars(x, vs));
+        lops.forEach(o => { if (o.e) collectVars(o.e, vs); });
+        const g = x => (e => evalAST(x, e));
+        const gT = x => (e => applyOpsVal(evalAST(x, e), lops, e));
+        const E = (fa, fb) => agreeVars(fa, fb, vs);
+        return (E(g(nL), gT(pL)) && E(g(nR), gT(pR))) ||
+               (E(g(nL), gT(pR)) && E(g(nR), gT(pL)));
+      } catch (err) { return false; }
+    })();
+    if (caseOk) {
+      const known = new Set();
+      collectVars(prevL, known); collectVars(prevR, known);
+      ops.forEach(o => { if (o.e) collectVars(o.e, known); });
+      const neu = new Set();
+      collectVars(newL, neu); collectVars(newR, neu);
+      let pair = null;
+      for (const v of neu) {
+        if (!known.has(v)) {
+          for (const w of known) {
+            if (w !== v && w.toLowerCase() === v.toLowerCase()) { pair = [v, w]; break; }
+          }
+        }
+        if (pair) break;
+      }
+      return { status: 'case',
+        msg: pair
+          ? 'Gro\u00df-/Kleinschreibung: ' + pair[0] + ' ist nicht dasselbe wie ' + pair[1] + '!'
+          : 'Achte auf Gro\u00df- und Kleinschreibung der Formelzeichen!' };
+    }
+    return { status: 'falsch', tilt: tiltDir(),
+      msg: 'Das passt nicht zu deinem Schritt. Pr\u00fcfe deine Rechnung.' };
+  }
+
+  return { status: 'declare',
+    msg: 'Du hast etwas ver\u00e4ndert \u2013 schreibe die Rechenoperation an den | Strich.' };
+}
+
+// ---------- Ziel erreicht? ----------
+function isSolved(L, R, target) {
+  const lv = (L.op === 'var' && L.v === target);
+  const rv = (R.op === 'var' && R.v === target);
+  if (lv && !collectVars(R).has(target)) return true;
+  if (rv && !collectVars(L).has(target)) return true;
+  return false;
+}
+
+// ---------- Gross/Klein-Hilfe ----------
+function lowerVarsAST(n) {
+  if (!n) return n;
+  const c = { op: n.op };
+  if ('v' in n) c.v = (n.op === 'var') ? String(n.v).toLowerCase() : n.v;
+  if ('name' in n) c.name = n.name;
+  if (n.a) c.a = lowerVarsAST(n.a);
+  if (n.b) c.b = lowerVarsAST(n.b);
+  return c;
+}
+
+// ---------- Zahlen-Kontrolle ----------
+function kontrolleInfo(L, R, target) {
+  let expr = null;
+  if (L.op === 'var' && L.v === target) expr = R;
+  else if (R.op === 'var' && R.v === target) expr = L;
+  else return null;
+  const vs = Array.from(collectVars(expr));
+  for (let t = 0; t < 160; t++) {
+    const env = {};
+    for (const v of vs) env[v] = 1 + Math.floor(Math.random() * 9);
+    const val = evalAST(expr, env);
+    if (!isFinite(val) || Math.abs(val) > 100000) continue;
+    const isInt = Math.abs(val - Math.round(val)) < 1e-9;
+    if (t < 100 && !isInt) continue;
+    return { env: env, val: val, vars: vs };
+  }
+  return null;
+}
+
+// ---------- Darstellung ----------
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+
+function varHTML(v) {
+  let m = /^(.+?)_(.+)$/.exec(v);
+  if (m) return '<i>' + esc(m[1]) + '</i><sub>' + esc(m[2]) + '</sub>';
+  m = /^([A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394])([0-9]+)$/.exec(v);
+  if (m) return '<i>' + esc(m[1]) + '</i><sub>' + m[2] + '</sub>';
+  m = /^([A-Z\u0394])([a-z]+[0-9]*)$/.exec(v);
+  if (m) return '<i>' + esc(m[1]) + '</i><sub>' + esc(m[2]) + '</sub>';
+  return '<i>' + esc(v) + '</i>';
+}
+
+function numHTML(v) {
+  let s = String(Math.round(v * 1e6) / 1e6);
+  return esc(s.replace('.', ','));
+}
+
+function prec(n) {
+  switch (n.op) {
+    case '+': case '-': return 1;
+    case '*': return 2;
+    case 'neg': return 2.2;
+    case '^': return 3;
+    default: return 4;
+  }
+}
+
+function render(n, need) {
+  need = need || 0;
+  let s;
+  switch (n.op) {
+    case 'num': s = numHTML(n.v); break;
+    case 'const': s = esc(n.name); break;
+    case 'var': s = varHTML(n.v); break;
+    case '+': s = render(n.a, 1) + ' + ' + render(n.b, 1.5); break;
+    case '-': s = render(n.a, 1) + ' \u2212 ' + render(n.b, 1.5); break;
+    case '*': s = render(n.a, 2) + ' \u00b7 ' + render(n.b, 2); break;
+    case 'neg': s = '\u2212' + render(n.a, 2.5); break;
+    case '/':
+      s = '<span class="frac"><span class="fn">' + render(n.a, 0) +
+          '</span><span class="fd">' + render(n.b, 0) + '</span></span>';
+      break;
+    case '^': {
+      let base = render(n.a, 3.5);
+      if (n.a.op === '/') base = '(' + base + ')';
+      s = base + '<sup>' + render(n.b, 0) + '</sup>';
+      break;
+    }
+    case 'sqrt':
+      s = '<span class="sqrt"><span class="rad">\u221a</span><span class="rbar">' +
+          render(n.a, 0) + '</span></span>';
+      break;
+    case 'ln': s = 'ln(' + render(n.a, 0) + ')'; break;
+    case 'lg': s = 'lg(' + render(n.a, 0) + ')'; break;
+    default: s = '?';
+  }
+  if (prec(n) < need) s = '(' + s + ')';
+  return s;
+}
+
+function renderOps(ops) {
+  if (!ops || !ops.length) return '';
+  return ops.map(op => {
+    if (op.k === 'q') return '( )\u00b2';
+    if (op.k === 'r') return '\u221a';
+    if (op.k === 'ln') return 'ln';
+    if (op.k === 'lg') return 'lg';
+    if (op.k === 'ex') return 'e^';
+    const sym = { '+': '+ ', '-': '\u2212 ', '*': '\u00b7 ', '/': ': ' }[op.k];
+    return sym + render(op.e, 2);
+  }).join(' \u2002 ');
+}
+
+// ---------- Aufgaben-Parser ----------
+function parseTask(str) {
+  const m = /^(.*?)=(.*?)->\s*(\S+)\s*$/.exec(str);
+  if (!m) throw new Error('Aufgabenformat: "links = rechts -> Ziel"  (' + str + ')');
+  return { Ls: m[1].trim(), Rs: m[2].trim(), target: m[3].trim(),
+           L: parse(m[1]), R: parse(m[2]) };
+}
+
+
+</script>
+
+<script>
+/* ============================ UI ============================ */
+(function () {
+  const $ = id => document.getElementById(id);
+  const inL = $('inL'), inR = $('inR'), inOp = $('inOp'), inZiel = $('inZiel');
+  const banner = $('banner'), verlauf = $('verlauf');
+  const arm = $('arm'), waageBox = $('waageBox');
+  const chkSchwer = $('chkSchwer');
+  let waageTimer = null;
+
+  let lines = [];
+  let target = null;
+  let freeMode = false;
+  let solvedShown = false;
+  let focusEl = inL;
+
+  // ---------- Aufgabenliste ----------
+  const sel = $('taskSel');
+  function taskLabel(a) {
+    return a.replace(/\^2/g, '\u00b2').replace(/\*/g, '\u00b7')
+            .replace(/->/, ' \u2192 ');
+  }
+  function buildSelect(keepId) {
+    sel.innerHTML = '';
+    const oF = document.createElement('option');
+    oF.value = 'frei'; oF.textContent = '\u2014 Freie Eingabe \u2014';
+    sel.appendChild(oF);
+    AUFGABEN.forEach((a, i) => {
+      const o = document.createElement('option');
+      o.value = 'b' + i; o.textContent = taskLabel(a);
+      sel.appendChild(o);
+    });
+    if (chkSchwer.checked) {
+      const grp = document.createElement('optgroup');
+      grp.label = 'Extra schwer';
+      AUFGABEN_PROFI.forEach((a, i) => {
+        const o = document.createElement('option');
+        o.value = 'p' + i; o.textContent = taskLabel(a);
+        grp.appendChild(o);
+      });
+      sel.appendChild(grp);
+    }
+    if (keepId && [...sel.options].some(o => o.value === keepId)) sel.value = keepId;
+    else sel.value = 'b0';
+  }
+  function taskById(id) {
+    if (id[0] === 'b') return AUFGABEN[parseInt(id.slice(1), 10)];
+    if (id[0] === 'p') return AUFGABEN_PROFI[parseInt(id.slice(1), 10)];
+    return null;
+  }
+  function pool() {
+    const ids = AUFGABEN.map((a, i) => 'b' + i);
+    if (chkSchwer.checked) AUFGABEN_PROFI.forEach((a, i) => ids.push('p' + i));
+    return ids;
+  }
+  function gotoTask(id) { sel.value = id; start(); }
+  function nextTask() {
+    const ids = pool();
+    const i = ids.indexOf(sel.value);
+    gotoTask(ids[(i < 0 ? 0 : i + 1) % ids.length]);
+  }
+  function randomTask() {
+    const ids = pool().filter(x => x !== sel.value);
+    gotoTask(ids[Math.floor(Math.random() * ids.length)]);
+  }
+
+  // ---------- Waage ----------
+  function setTilt(dir) {
+    document.documentElement.style.setProperty('--tilt', (dir * 9) + 'deg');
+  }
+  function waageRuhe() {
+    clearTimeout(waageTimer);
+    waageBox.classList.remove('wach', 'gut', 'schlecht');
+    setTilt(0);
+  }
+  function waageGut() {
+    clearTimeout(waageTimer);
+    waageBox.classList.remove('schlecht');
+    waageBox.classList.add('wach', 'gut');
+    setTilt(0);
+    arm.classList.remove('nod'); void arm.offsetWidth; arm.classList.add('nod');
+    waageTimer = setTimeout(waageRuhe, 1500);
+  }
+  function waageSchlecht(dir) {
+    clearTimeout(waageTimer);
+    waageBox.classList.remove('gut');
+    waageBox.classList.add('wach', 'schlecht');
+    setTilt(dir || 1);
+  }
+  function showEq(L, R) {
+    $('panL').innerHTML = L ? render(L) : '?';
+    $('panR').innerHTML = R ? render(R) : '?';
+  }
+
+  // ---------- Verlauf ----------
+  function drawVerlauf() {
+    verlauf.innerHTML = '';
+    lines.forEach((ln, idx) => {
+      const d = document.createElement('div');
+      d.className = 'zeile eqgrid' + (idx === lines.length - 1 ? ' cur' : '');
+      const mark = idx === 0 ? '<span class="start">Start</span>' : '\u2714';
+      d.innerHTML =
+        '<div class="cMark">' + mark + '</div>' +
+        '<div class="cL">' + render(ln.L) + '</div>' +
+        '<div class="cEq">=</div>' +
+        '<div class="cR">' + render(ln.R) + '</div>' +
+        '<div class="cOp' + (ln.opAfter ? ' hasop' : '') + '">' +
+          (ln.opAfter ? renderOps(ln.opAfter) : '') + '</div>';
+      verlauf.appendChild(d);
+    });
+  }
+
+  // ---------- Feedback ----------
+  function say(kind, html) { banner.className = kind; banner.innerHTML = html; }
+  function quiet() {
+    banner.className = ''; banner.innerHTML = '';
+    waageRuhe(); markBad(null);
+  }
+  function markBad(field) {
+    inL.classList.toggle('bad', field === 'L');
+    inR.classList.toggle('bad', field === 'R');
+    inOp.classList.toggle('bad', field === 'op');
+  }
+
+  // ---------- Vorschau ----------
+  function updatePreview() {
+    const pvL = $('pvL'), pvR = $('pvR'), pvOp = $('pvOp');
+    try { pvL.innerHTML = inL.value.trim() ? render(parse(inL.value)) : ''; }
+    catch (e) { pvL.innerHTML = '<span class="dim">\u26a0</span>'; }
+    try { pvR.innerHTML = inR.value.trim() ? render(parse(inR.value)) : ''; }
+    catch (e) { pvR.innerHTML = '<span class="dim">\u26a0</span>'; }
+    try {
+      const ops = parseOps(inOp.value);
+      pvOp.className = 'cOp' + (ops ? ' hasop' : '');
+      pvOp.innerHTML = ops ? renderOps(ops) : '';
+    } catch (e) { pvOp.className = 'cOp hasop'; pvOp.innerHTML = '<span class="dim">\u26a0</span>'; }
+  }
+
+  // ---------- Start ----------
+  function start() {
+    lines = []; target = null; solvedShown = false;
+    quiet();
+    inL.value = ''; inR.value = ''; inOp.value = ''; inZiel.value = '';
+    const id = sel.value;
+    freeMode = (id === 'frei');
+    $('zielrow').style.display = freeMode ? 'flex' : 'none';
+    if (!freeMode) {
+      const t = parseTask(taskById(id));
+      target = t.target;
+      lines.push({ L: t.L, R: t.R, opAfter: null });
+      showEq(t.L, t.R);
+      $('zielInfo').innerHTML = '\u2013 stelle nach <b>' +
+        render({ op: 'var', v: target }) + '</b> um';
+    } else {
+      showEq(null, null);
+      $('zielInfo').innerHTML = '\u2013 freie Eingabe: Start-Gleichung schreiben, dann Pr\u00fcfen';
+    }
+    drawVerlauf();
+    updatePreview();
+    inL.focus(); focusEl = inL;
+  }
+
+  // ---------- Pruefen ----------
+  function doCheck() {
+    markBad(null);
+
+    if (!lines.length) {
+      let L, R;
+      try { L = parse(inL.value); }
+      catch (e) { markBad('L'); say('warn', 'Linke Seite: ' + e.message); return; }
+      try { R = parse(inR.value); }
+      catch (e) { markBad('R'); say('warn', 'Rechte Seite: ' + e.message); return; }
+      if (inOp.value.trim()) { markBad('op'); say('warn', 'Die Start-Zeile braucht noch keinen | Schritt.'); return; }
+      target = inZiel.value.trim() || null;
+      lines.push({ L: L, R: R, opAfter: null });
+      showEq(L, R); drawVerlauf(); waageGut();
+      inL.value = ''; inR.value = ''; updatePreview();
+      $('zielInfo').innerHTML = target
+        ? '\u2013 stelle nach <b>' + render({ op: 'var', v: target }) + '</b> um'
+        : '\u2013 frei probieren, die Waage passt auf';
+      inL.focus();
+      return;
+    }
+
+    const prev = lines[lines.length - 1];
+    const res = checkStep(prev.L, prev.R, inOp.value, inL.value, inR.value);
+
+    if (res.status === 'syntax') {
+      markBad(res.field);
+      say('warn', 'Da stimmt ein Zeichen nicht: ' + res.msg);
+      return;
+    }
+    if (res.status === 'declare' || res.status === 'notApplied' || res.status === 'case') {
+      say('warn', res.msg);
+      return;
+    }
+    if (res.status === 'einseitig' || res.status === 'falsch') {
+      waageSchlecht(res.tilt || 1);
+      say('err', '<b>Die Waage kippt!</b><br>' + res.msg +
+        '<br><span style="font-size:0.95rem">\u00c4ndere deine Zeile und pr\u00fcfe noch einmal.</span>');
+      return;
+    }
+
+    // ok
+    let ops = null;
+    try { ops = parseOps(inOp.value); } catch (e) { ops = null; }
+    prev.opAfter = ops;
+    lines.push({ L: res.newL, R: res.newR, opAfter: null });
+    showEq(res.newL, res.newR);
+    drawVerlauf();
+    waageGut();
+    inL.value = ''; inR.value = ''; inOp.value = '';
+    updatePreview();
+    inL.focus();
+
+    if (target && isSolved(res.newL, res.newR, target) && !solvedShown) {
+      solvedShown = true;
+      say('ok', '<b>\u2714 Geschafft \u2013 nach ' + render({ op: 'var', v: target }) +
+        ' umgestellt!</b><br>' + kontrolleText(res.newL, res.newR, target) +
+        '<br><button class="bbtn" id="bNext">N\u00e4chste Aufgabe \u279c</button>' +
+        '<button class="bbtn zufall" id="bRand">\u{1f3b2} Zuf\u00e4llige</button>');
+    } else {
+      say('ok', ops ? 'Richtig \u2013 die Waage bleibt im Gleichgewicht.' : 'Richtig vereinfacht.');
+    }
+  }
+
+  banner.addEventListener('click', ev => {
+    if (ev.target.id === 'bNext') nextTask();
+    if (ev.target.id === 'bRand') randomTask();
+  });
+
+  function kontrolleText(L, R, tgt) {
+    const k = kontrolleInfo(L, R, tgt);
+    if (!k) return 'Kontrolle: setze eigene Zahlen ein und pr\u00fcfe auf dem Papier.';
+    const num = x => String(Math.round(x * 100) / 100).replace('.', ',');
+    const parts = k.vars.map(v => render({ op: 'var', v: v }) + ' = ' + k.env[v]).join(', ');
+    return 'Kontrolle: mit ' + parts + ' &nbsp;\u2192&nbsp; ' +
+      render({ op: 'var', v: tgt }) + ' = ' + num(k.val) + ' \u2714';
+  }
+
+  // ---------- Undo ----------
+  function undo() {
+    if (lines.length <= (freeMode ? 0 : 1)) return;
+    lines.pop();
+    if (lines.length) {
+      lines[lines.length - 1].opAfter = null;
+      const last = lines[lines.length - 1];
+      showEq(last.L, last.R);
+    } else {
+      showEq(null, null);
+    }
+    solvedShown = false;
+    drawVerlauf(); quiet(); updatePreview();
+  }
+
+  // ---------- Tastatur ----------
+  const VARS = ['U','R','I','P','W','Q','t','s','v','m',
+                'a','f','T','A','l','x','y','b','c','\u03c1',
+                '\u03b7','L','C','N','n'];
+  const kv = $('kVars');
+  VARS.forEach(v => {
+    const b = document.createElement('button');
+    b.className = 'key'; b.textContent = v;
+    kv.appendChild(b);
+  });
+
+  function insert(txt) {
+    const el = focusEl || inL;
+    const s = el.selectionStart ?? el.value.length;
+    const e = el.selectionEnd ?? el.value.length;
+    el.value = el.value.slice(0, s) + txt + el.value.slice(e);
+    const pos = s + txt.length;
+    el.focus();
+    el.setSelectionRange(pos, pos);
+    onInput();
+  }
+  function del() {
+    const el = focusEl || inL;
+    const s = el.selectionStart ?? el.value.length;
+    const e = el.selectionEnd ?? el.value.length;
+    if (s !== e) { el.value = el.value.slice(0, s) + el.value.slice(e); el.setSelectionRange(s, s); }
+    else if (s > 0) { el.value = el.value.slice(0, s - 1) + el.value.slice(e); el.setSelectionRange(s - 1, s - 1); }
+    el.focus();
+    onInput();
+  }
+
+  document.querySelectorAll('.key').forEach(k => {
+    k.addEventListener('mousedown', ev => ev.preventDefault());
+    k.addEventListener('touchstart', ev => { ev.preventDefault(); handleKey(k); }, { passive: false });
+    k.addEventListener('click', () => handleKey(k));
+  });
+  let lastTouch = 0;
+  function handleKey(k) {
+    const now = Date.now();
+    if (now - lastTouch < 80) return;
+    lastTouch = now;
+    if (k.id === 'kDel') { del(); return; }
+    if (k.id === 'kClr') { (focusEl || inL).value = ''; onInput(); (focusEl || inL).focus(); return; }
+    let txt = k.textContent;
+    if (k.id === 'kSqrt' && focusEl === inOp) txt = '\u221a';
+    if (k.id === 'kLn' && focusEl === inOp) txt = 'ln';
+    insert(txt);
+  }
+
+  [inL, inR, inOp, inZiel].forEach(el => {
+    el.addEventListener('focus', () => { focusEl = el; });
+    el.addEventListener('input', onInput);
+    el.addEventListener('keydown', ev => { if (ev.key === 'Enter') doCheck(); });
+  });
+  function onInput() {
+    if (banner.className === 'err' || banner.className === 'warn') quiet();
+    updatePreview();
+  }
+
+  $('btnCheck').addEventListener('click', doCheck);
+  $('btnNeu').addEventListener('click', start);
+  $('btnUndo').addEventListener('click', undo);
+  sel.addEventListener('change', start);
+  chkSchwer.addEventListener('change', () => { buildSelect(sel.value); start(); });
+
+  buildSelect(null);
+  start();
+})();
+</script>
+</body>
+</html>
