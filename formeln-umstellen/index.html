@@ -1015,6 +1015,7 @@ function parseTask(str) {
   function start() {
     lines = []; target = null; solvedShown = false;
     quiet();
+    $('next').style.display = '';
     inL.value = ''; inR.value = ''; inOp.value = ''; inZiel.value = '';
     const id = sel.value;
     freeMode = (id === 'frei');
@@ -1096,6 +1097,7 @@ function parseTask(str) {
 
     if (target && isSolved(res.newL, res.newR, target) && !solvedShown) {
       solvedShown = true;
+      $('next').style.display = 'none';
       say('ok', '<b>\u2714 Geschafft \u2013 nach ' + render({ op: 'var', v: target }) +
         ' umgestellt!</b><br>' + kontrolleText(res.newL, res.newR, target) +
         '<br><button class="bbtn" id="bNext">N\u00e4chste Aufgabe \u279c</button>' +
@@ -1135,6 +1137,7 @@ function parseTask(str) {
       showEq(null, null);
     }
     solvedShown = false;
+    $('next').style.display = '';
     drawVerlauf(); quiet(); updatePreview(); updateUndoBtn();
   }
 
