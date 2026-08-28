@@ -426,6 +426,8 @@ function tokenize(s) {
     .replace(/\u2212/g, '-')
     .replace(/,/g, '.')
     .replace(/\s+/g, '')
+    .replace(/cos\s*phi/gi, 'cos\u03c6')
+    .replace(/sin\s*phi/gi, 'sin\u03c6')
     .replace(/ln/g, '\u2113')
     .replace(/lg/g, '\u00a3')
     .replace(/pi/g, '\u03c0');
@@ -444,9 +446,14 @@ function tokenize(s) {
     if (c === '\u03c0') { toks.push({ t: 'const', name: '\u03c0', v: Math.PI }); i++; continue; }
     if (c === '\u2113') { toks.push({ t: 'ln' }); i++; continue; }
     if (c === '\u00a3') { toks.push({ t: 'lg' }); i++; continue; }
-    if (/[A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394]/.test(c)) {
+    if (/[A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394\u03c6\u03ba\u03b1]/.test(c)) {
+      if (s.startsWith('cos\u03c6', i)) { toks.push({ t: 'var', v: 'cos\u03c6' }); i += 4; continue; }
+      if (s.startsWith('sin\u03c6', i)) { toks.push({ t: 'var', v: 'sin\u03c6' }); i += 4; continue; }
       let j = i + 1;
-      if (/[A-Z\u0394]/.test(c)) {
+      if (c === '\u0394') {                        // Delta-Verbund: \u0394U, \u0394T, \u0394p
+        if (j < s.length && /[A-Za-z]/.test(s[j])) j++;
+        while (j < s.length && /[a-z]/.test(s[j])) j++;
+      } else if (/[A-Z]/.test(c)) {
         while (j < s.length && /[a-z]/.test(s[j])) j++;
       }
       while (j < s.length && /[0-9]/.test(s[j])) j++;
@@ -797,9 +804,12 @@ function kontrolleInfo(L, R, target) {
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
 
 function varHTML(v) {
+  if (v === 'cos\u03c6' || v === 'sin\u03c6')
+    return esc(v.slice(0, 3)) + '\u2009<i>\u03c6</i>';
+  if (/^\u0394./.test(v)) return '\u0394<i>' + esc(v.slice(1)) + '</i>';
   let m = /^(.+?)_(.+)$/.exec(v);
   if (m) return '<i>' + esc(m[1]) + '</i><sub>' + esc(m[2]) + '</sub>';
-  m = /^([A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394])([0-9]+)$/.exec(v);
+  m = /^([A-Za-z\u03c1\u03c4\u03c9\u03b7\u0394\u03c6\u03ba\u03b1])([0-9]+)$/.exec(v);
   if (m) return '<i>' + esc(m[1]) + '</i><sub>' + m[2] + '</sub>';
   m = /^([A-Z\u0394])([a-z]+[0-9]*)$/.exec(v);
   if (m) return '<i>' + esc(m[1]) + '</i><sub>' + esc(m[2]) + '</sub>';
