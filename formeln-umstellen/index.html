@@ -177,6 +177,13 @@
   .rad { font-size: 1.25em; line-height: 1; align-self: flex-end; }
   .rbar { border-top: 1.6px solid currentColor; padding: 1px 4px 0 2px; }
   input::placeholder { color: #777; opacity: 0.7; font-size: 0.9em; }
+  #tipwrap details + details { margin-top: 8px; }
+  #tipwrap p { margin: 8px 0 6px; }
+  #tipwrap .klein { font-size: 0.88rem; color: #555; }
+  .gegenops { border-collapse: collapse; margin: 4px 0; }
+  .gegenops td { padding: 2px 8px 2px 0; }
+  .bsp div { padding: 3px 0; font-size: 1.05rem; }
+  .bspop { color: var(--hgruen); margin-left: 16px; }
   i { font-style: italic; }
   sub, sup { font-size: 0.72em; }
 
@@ -250,7 +257,30 @@
 
     <div id="tipwrap">
       <details>
-        <summary>Tipp: Reihenfolge beim Umstellen</summary>
+        <summary>Wie funktioniert das Umstellen?</summary>
+        <p>Eine Gleichung ist wie eine Waage im Gleichgewicht. Sie bleibt
+        im Gleichgewicht, wenn du auf <b>beiden Seiten dieselbe
+        Rechenoperation</b> machst. Zum Umstellen r&auml;umst du alles, was
+        nicht zur gesuchten Gr&ouml;&szlig;e geh&ouml;rt, mit der
+        <b>Gegenoperation</b> weg:</p>
+        <table class="gegenops">
+          <tr><td>+ addieren</td><td>&#8596;</td><td>&minus; subtrahieren</td></tr>
+          <tr><td>&middot; multiplizieren</td><td>&#8596;</td><td>: dividieren</td></tr>
+          <tr><td>(&hellip;)&sup2; quadrieren</td><td>&#8596;</td><td>&radic; Wurzel ziehen</td></tr>
+          <tr><td>e^ Exponential</td><td>&#8596;</td><td>ln Logarithmus</td></tr>
+        </table>
+        <p style="margin-bottom:4px"><b>Beispiel:</b></p>
+        <div class="bsp">
+          <div><i>U</i> = <i>R</i> &middot; <i>I</i><span class="bspop">| : <i>I</i></span></div>
+          <div><span class="frac"><span class="fn"><i>U</i></span><span class="fd"><i>I</i></span></span> = <i>R</i></div>
+          <div><i>R</i> = <span class="frac"><span class="fn"><i>U</i></span><span class="fd"><i>I</i></span></span></div>
+        </div>
+        <p class="klein">Punkt- vor Strichrechnung gilt auch beim Tippen:
+        Die Vorschau zeigt dir, wie deine Eingabe gelesen wird.
+        Im Zweifel Klammern setzen.</p>
+      </details>
+      <details>
+        <summary>Welche Reihenfolge ist sinnvoll?</summary>
         <ol>
           <li><b>Klammern</b> sind ein Paket &ndash; erst alles andere wegr&auml;umen.</li>
           <li>Zuerst <b>+ und &minus;</b> auf die andere Seite.</li>
@@ -325,13 +355,15 @@
    ================================================================
        HIER NEUE AUFGABEN EINTRAGEN
        Format:  "linke Seite = rechte Seite -> Zielgroesse"
-       Erlaubt: + - * / ^2 Klammern Wurzel(...) ln(...) e pi
-                Variablen wie R1, U2, Rges, X_C
+       Erlaubt: + - * / ^2 Klammern sqrt(...) ln(...) e pi
+                Variablen wie R1, U2, Rges, X_C, \u0394U, cos\u03c6
+       Jede Stufe ist eine Gruppe in der Aufgabenwahl.
        Beispiel:  "U = R*I -> R"
    ================================================================
    ================================================================ */
-const AUFGABEN = [
-  // ---- A: zwei Groessen (leicht) ----
+const STUFEN = [
+{ name: 'Stufe 1 \u2013 leicht', aufgaben: [
+  // ---- nur Mal und Geteilt, ein Schritt ----
   "U = R*I -> R",
   "U = R*I -> I",
   "P = U*I -> U",
@@ -344,7 +376,11 @@ const AUFGABEN = [
   "Q = C*U -> U",
   "\u03c4 = R*C -> C",
   "M = F*r -> F",
-  // ---- B: Bruch-Form gegeben ----
+  "W = F*s -> F",
+  "P = M*\u03c9 -> M",
+  "P = M*\u03c9 -> \u03c9",
+  "\u03c9 = 2*\u03c0*f -> f",
+  // ---- Bruch-Form gegeben ----
   "I = U/R -> U",
   "I = U/R -> R",
   "v = s/t -> s",
@@ -354,37 +390,67 @@ const AUFGABEN = [
   "\u03c1 = m/V -> V",
   "\u03b7 = Pab/Pzu -> Pab",
   "\u03b7 = Pab/Pzu -> Pzu",
-  // ---- C: drei und mehr Groessen ----
+  "cos\u03c6 = P/S -> P",
+  "cos\u03c6 = P/S -> S",
+]},
+{ name: 'Stufe 2 \u2013 mittel', aufgaben: [
+  // ---- mehrere Schritte, Mal/Geteilt gemischt ----
   "W = U*I*t -> U",
   "W = U*I*t -> t",
   "y = a*b*c -> b",
   "V = l*b*h -> b",
-  "Xl = 2*\u03c0*f*L -> L",
-  "Xl = 2*\u03c0*f*L -> f",
+  "F = B*I*l -> B",
+  "F = B*I*l -> l",
+  "X_L = 2*\u03c0*f*L -> L",
+  "X_L = 2*\u03c0*f*L -> f",
   "n = f*60/p -> f",
-  // ---- D: Mal und Geteilt gemischt ----
+  "S = sqrt(3)*U*I -> U",
+  "S = sqrt(3)*U*I -> I",
+  "P = 2*\u03c0*n*M -> M",
+  "P = 2*\u03c0*n*M -> n",
+  "v = \u03c0*d*n -> n",
+  "v = \u03c0*d*n -> d",
   "R = \u03c1*l/A -> l",
   "R = \u03c1*l/A -> A",
   "R = \u03c1*l/A -> \u03c1",
+  "R = l/(\u03ba*A) -> l",
+  "R = l/(\u03ba*A) -> \u03ba",
+  "\u0394U = 2*l*I*\u03c1/A -> l",
+  "\u0394U = 2*l*I*\u03c1/A -> I",
+  "\u0394U = 2*l*I*\u03c1/A -> \u03c1",
+  "\u0394U = 2*l*I*\u03c1/A -> A",
+  "\u0394U = 2*l*I/(\u03ba*A) -> l",
+  "\u0394U = 2*l*I/(\u03ba*A) -> \u03ba",
   "f = 1/T -> T",
   "G = 1/R -> R",
-  // ---- E: plus und minus ----
+  // ---- plus und minus ----
   "U0 = U1+U2 -> U2",
   "I = I1+I2 -> I1",
   "y = a*x+b -> x",
   "Rg = R1+R2+R3 -> R2",
-  // ---- F: Klammern (bleiben zusammen!) ----
+]},
+{ name: 'Stufe 3 \u2013 schwer', aufgaben: [
+  // ---- Klammern als Paket ----
   "U = I*(R1+R2) -> R1",
   "P = U*(I1+I2) -> I2",
-  // ---- G: Quadrat und Wurzel (schwer) ----
+  "R2 = R1*(1+\u03b1*\u0394T) -> \u0394T",
+  "s = (n1-n)/n1 -> n",
+  // ---- Quadrat und Wurzel ----
   "P = U^2/R -> R",
   "P = U^2/R -> U",
   "P = I^2*R -> R",
   "P = I^2*R -> I",
+  "W = C*U^2/2 -> U",
+  "W = C*U^2/2 -> C",
+  "W = L*I^2/2 -> I",
+  // ---- Drehstrom ----
+  "P = sqrt(3)*U*I*cos\u03c6 -> cos\u03c6",
+  "P = sqrt(3)*U*I*cos\u03c6 -> I",
+]},
 ];
 
 /* ================================================================
-       EXTRA SCHWER  (nur sichtbar mit Haken "Extra schwer")
+       EXTRA SCHWER  (nur sichtbar mit Haken "Extra schwere Aufgaben")
    ================================================================ */
 const AUFGABEN_PROFI = [
   // Spannungsteiler
@@ -393,10 +459,12 @@ const AUFGABEN_PROFI = [
   // Transformator
   "U1/U2 = N1/N2 -> U2",
   // Blindwiderstaende
-  "Xc = 1/(2*\u03c0*f*C) -> C",
-  "Xc = 1/(2*\u03c0*f*C) -> f",
+  "X_C = 1/(2*\u03c0*f*C) -> C",
+  "X_C = 1/(2*\u03c0*f*C) -> f",
   // Parallelschaltung (Ausklammern noetig!)
   "Rg = R1*R2/(R1+R2) -> R1",
+  // Schlupf nach n1 (Ausklammern noetig!)
+  "s = (n1-n)/n1 -> n1",
   // Kondensator laden / entladen (mit ln)
   "u = U*(1-e^(-t/(R*C))) -> t",
   "i = I0*e^(-t/\u03c4) -> t",
@@ -909,39 +977,47 @@ function parseTask(str) {
   const sel = $('taskSel');
   function taskLabel(a) {
     return a.replace(/\^2/g, '\u00b2').replace(/\*/g, '\u00b7')
-            .replace(/->/, ' \u2192 ');
+            .replace(/sqrt/g, '\u221a').replace(/->/, ' \u2192 ');
   }
+  const GRUPPEN = STUFEN.map((s, gi) =>
+      ({ name: s.name, aufgaben: s.aufgaben, prefix: 's' + gi }))
+    .concat([{ name: 'Extra schwer', aufgaben: AUFGABEN_PROFI,
+               prefix: 'p', nurMitHaken: true }]);
   function buildSelect(keepId) {
     sel.innerHTML = '';
     const oF = document.createElement('option');
     oF.value = 'frei'; oF.textContent = '\u2014 Freie Eingabe \u2014';
     sel.appendChild(oF);
-    AUFGABEN.forEach((a, i) => {
-      const o = document.createElement('option');
-      o.value = 'b' + i; o.textContent = taskLabel(a);
-      sel.appendChild(o);
-    });
-    if (chkSchwer.checked) {
+    GRUPPEN.forEach(g => {
+      if (g.nurMitHaken && !chkSchwer.checked) return;
       const grp = document.createElement('optgroup');
-      grp.label = 'Extra schwer';
-      AUFGABEN_PROFI.forEach((a, i) => {
+      grp.label = g.name;
+      g.aufgaben.forEach((a, i) => {
         const o = document.createElement('option');
-        o.value = 'p' + i; o.textContent = taskLabel(a);
+        o.value = g.prefix + '-' + i; o.textContent = taskLabel(a);
         grp.appendChild(o);
       });
       sel.appendChild(grp);
-    }
+    });
     if (keepId && [...sel.options].some(o => o.value === keepId)) sel.value = keepId;
-    else sel.value = 'b0';
+    else sel.value = 's0-0';
   }
   function taskById(id) {
-    if (id[0] === 'b') return AUFGABEN[parseInt(id.slice(1), 10)];
-    if (id[0] === 'p') return AUFGABEN_PROFI[parseInt(id.slice(1), 10)];
-    return null;
+    const m = /^(s\d+|p)-(\d+)$/.exec(id);
+    if (!m) return null;
+    const g = GRUPPEN.find(x => x.prefix === m[1]);
+    return g ? g.aufgaben[parseInt(m[2], 10)] : null;
+  }
+  function stageOf(id) {
+    const m = /^(s\d+|p)-/.exec(id);
+    return m ? m[1] : null;
   }
   function pool() {
-    const ids = AUFGABEN.map((a, i) => 'b' + i);
-    if (chkSchwer.checked) AUFGABEN_PROFI.forEach((a, i) => ids.push('p' + i));
+    const ids = [];
+    GRUPPEN.forEach(g => {
+      if (g.nurMitHaken && !chkSchwer.checked) return;
+      g.aufgaben.forEach((a, i) => ids.push(g.prefix + '-' + i));
+    });
     return ids;
   }
   function gotoTask(id) { sel.value = id; start(); }
@@ -950,8 +1026,13 @@ function parseTask(str) {
     const i = ids.indexOf(sel.value);
     gotoTask(ids[(i < 0 ? 0 : i + 1) % ids.length]);
   }
-  function randomTask() {
-    const ids = pool().filter(x => x !== sel.value);
+  function randomTask(gleicheStufe) {
+    let ids = pool().filter(x => x !== sel.value);
+    if (gleicheStufe) {
+      const st = stageOf(sel.value);
+      const inStufe = ids.filter(x => stageOf(x) === st);
+      if (inStufe.length) ids = inStufe;
+    }
     gotoTask(ids[Math.floor(Math.random() * ids.length)]);
   }
 
@@ -1124,7 +1205,8 @@ function parseTask(str) {
       say('ok', '<b>\u2714 Geschafft \u2013 nach ' + render({ op: 'var', v: target }) +
         ' umgestellt!</b><br>' + kontrolleText(res.newL, res.newR, target) +
         '<br><button class="bbtn" id="bNext">N\u00e4chste Aufgabe \u279c</button>' +
-        '<button class="bbtn zufall" id="bRand">\u{1f3b2} Zuf\u00e4llige</button>');
+        '<button class="bbtn zufall" id="bRandS">\u{1f3b2} Zufall \u2013 gleiche Stufe</button>' +
+        '<button class="bbtn zufall" id="bRandA">\u{1f3b2} Zufall \u2013 alle Stufen</button>');
     } else {
       say('ok', ops ? 'Richtig \u2013 die Waage bleibt im Gleichgewicht.' : 'Richtig vereinfacht.');
     }
@@ -1132,7 +1214,8 @@ function parseTask(str) {
 
   banner.addEventListener('click', ev => {
     if (ev.target.id === 'bNext') nextTask();
-    if (ev.target.id === 'bRand') randomTask();
+    if (ev.target.id === 'bRandS') randomTask(true);
+    if (ev.target.id === 'bRandA') randomTask(false);
   });
 
   function kontrolleText(L, R, tgt) {
@@ -1167,7 +1250,8 @@ function parseTask(str) {
   // ---------- Tastatur ----------
   const VARS_ALL = ['U','R','I','P','W','Q','t','s','v','m',
                 'a','f','T','A','l','x','y','b','c','\u03c1',
-                '\u03b7','L','C','N','n','\u03c4','\u03c9','\u0394'];
+                '\u03b7','L','C','N','n','\u03c4','\u03c9','\u0394',
+                '\u03ba','\u03b1','cos\u03c6'];
   const kv = $('kVars');
 
   function orderedTaskVars() {
