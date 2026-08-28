@@ -31,6 +31,9 @@
     color: var(--hblue); cursor: pointer; min-height: 48px;
   }
   button:active { background: var(--hbg); }
+  button:disabled { opacity: 0.45; cursor: default; color: #7a8794;
+    border-color: #b9c6d6; }
+  button:disabled:active { background: white; }
   #taskSel { width: 100%; margin-bottom: 8px; }
   .btnrow { display: flex; gap: 8px; }
   .btnrow button { flex: 1; }
@@ -56,7 +59,7 @@
 
   #waageOuter { display: flex; justify-content: center; }
   #waageBox { position: relative; height: 150px; width: 560px; max-width: 100%;
-    opacity: 0.4; transform: scale(0.82); transform-origin: top center;
+    opacity: 0.6; transform: scale(0.82); transform-origin: top center;
     transition: opacity 0.5s, transform 0.5s; }
   #waageBox.wach { opacity: 1; transform: scale(1); }
   #arm { position: absolute; left: 50%; top: 44px; width: 84%; height: 6px;
@@ -118,14 +121,21 @@
 
   #next { margin-top: 8px; padding: 10px 0 4px; background: var(--hbg);
     border-radius: 10px; border: 1.5px dashed var(--hblue); }
-  #next .cMark { color: var(--hgruen); font-weight: bold; font-size: 1.0rem; }
+  #next .cMark { color: var(--hblue); font-weight: bold; font-size: 1.0rem; }
   #next input { font-family: inherit; font-size: 1.25rem; padding: 9px;
     border: 1.5px solid #b9c6d6; border-radius: 8px; min-height: 48px;
     width: 100%; background: white; }
   #next input:focus { outline: 2px solid var(--hblue); }
   #next input.bad { border-color: var(--warnrot); outline: 2px solid var(--warnrot); }
   #inL { text-align: right; }
-  #inOp { border-style: dashed; margin-left: 6px; width: calc(100% - 12px); }
+  .cOp.live { border-left-color: transparent; }
+  .oprow { display: flex; align-items: center; gap: 6px; }
+  .opfix { color: var(--hgruen); font-weight: bold; font-size: 1.25rem; }
+  #inOp { border-style: dashed; flex: 1; min-width: 0; width: auto;
+    font-size: 1.1rem; padding: 7px; min-height: 42px; }
+  #pvOpLive { font-size: 0.95rem; color: #667; min-height: 1.2em;
+    padding: 2px 0 0 14px; }
+  #opPark { display: none; }
   #prevrow { color: #667; }
   #prevgrid { font-size: 1.15rem; padding: 6px 0 2px; min-height: 2em; color: #667; }
   .dim { color: #aab; font-size: 0.9rem; }
@@ -157,6 +167,7 @@
   .sqrt { display: inline-flex; align-items: stretch; vertical-align: middle; }
   .rad { font-size: 1.25em; line-height: 1; align-self: flex-end; }
   .rbar { border-top: 1.6px solid currentColor; padding: 1px 4px 0 2px; }
+  input::placeholder { color: #777; opacity: 0.7; font-size: 0.9em; }
   i { font-style: italic; }
   sub, sup { font-size: 0.72em; }
 
@@ -187,11 +198,11 @@
     <div id="sideTop">
       <select id="taskSel"></select>
       <div class="btnrow">
-        <button id="btnNeu">Neu</button>
+        <button id="btnNeu">Neu starten</button>
         <button id="btnUndo">Schritt zur&uuml;ck</button>
       </div>
       <label id="schwerRow"><input type="checkbox" id="chkSchwer">
-        Extra schwer freischalten</label>
+        Extra schwere Aufgaben anzeigen</label>
     </div>
 
     <div id="kbdwrap">
@@ -256,6 +267,11 @@
       <div id="karte">
         <h2>Dein Rechenweg <span id="zielInfo"></span></h2>
         <div id="verlauf"></div>
+        <div id="opPark"><div id="opDock">
+          <div class="oprow"><span class="opfix">|</span><input id="inOp"
+            inputmode="none" autocomplete="off" placeholder=":I"></div>
+          <div id="pvOpLive"></div>
+        </div></div>
 
         <div id="next">
           <div class="eqgrid">
@@ -263,14 +279,14 @@
             <div class="cL"><input id="inL" inputmode="none" autocomplete="off" placeholder="linke Seite"></div>
             <div class="cEq">=</div>
             <div class="cR"><input id="inR" inputmode="none" autocomplete="off" placeholder="rechte Seite"></div>
-            <div class="cOp"><input id="inOp" inputmode="none" autocomplete="off" placeholder=":I"></div>
+            <div class="cOp"></div>
           </div>
           <div class="eqgrid" id="prevgrid">
             <div class="cMark"></div>
             <div class="cL" id="pvL"></div>
             <div class="cEq" style="color:#99a">=</div>
             <div class="cR" id="pvR"></div>
-            <div class="cOp" id="pvOp"></div>
+            <div class="cOp"></div>
           </div>
           <div id="zielrow">
             <span>Umstellen nach:</span>
@@ -854,6 +870,7 @@ function parseTask(str) {
 (function () {
   const $ = id => document.getElementById(id);
   const inL = $('inL'), inR = $('inR'), inOp = $('inOp'), inZiel = $('inZiel');
+  const opDock = $('opDock'), opPark = $('opPark'), btnUndo = $('btnUndo');
   const banner = $('banner'), verlauf = $('verlauf');
   const arm = $('arm'), waageBox = $('waageBox');
   const chkSchwer = $('chkSchwer');
@@ -944,20 +961,27 @@ function parseTask(str) {
   }
 
   // ---------- Verlauf ----------
+  function parkOpDock() { opPark.appendChild(opDock); }
+
   function drawVerlauf() {
+    parkOpDock();
     verlauf.innerHTML = '';
     lines.forEach((ln, idx) => {
+      const last = idx === lines.length - 1;
       const d = document.createElement('div');
-      d.className = 'zeile eqgrid' + (idx === lines.length - 1 ? ' cur' : '');
+      d.className = 'zeile eqgrid' + (last ? ' cur' : '');
       const mark = idx === 0 ? '<span class="start">Start</span>' : '\u2714';
       d.innerHTML =
         '<div class="cMark">' + mark + '</div>' +
         '<div class="cL">' + render(ln.L) + '</div>' +
         '<div class="cEq">=</div>' +
         '<div class="cR">' + render(ln.R) + '</div>' +
-        '<div class="cOp' + (ln.opAfter ? ' hasop' : '') + '">' +
+        '<div class="cOp' + (ln.opAfter ? ' hasop' : (last ? ' live' : '')) + '">' +
           (ln.opAfter ? renderOps(ln.opAfter) : '') + '</div>';
       verlauf.appendChild(d);
+      if (last && !ln.opAfter && !(target && isSolved(ln.L, ln.R, target))) {
+        d.querySelector('.cOp').appendChild(opDock);
+      }
     });
   }
 
@@ -975,7 +999,7 @@ function parseTask(str) {
 
   // ---------- Vorschau ----------
   function updatePreview() {
-    const pvL = $('pvL'), pvR = $('pvR'), pvOp = $('pvOp');
+    const pvL = $('pvL'), pvR = $('pvR'), pvOp = $('pvOpLive');
     try { pvL.innerHTML = inL.value.trim() ? render(parse(inL.value)) : ''; }
     catch (e) { pvL.innerHTML = '<span class="dim">\u26a0</span>'; }
     try { pvR.innerHTML = inR.value.trim() ? render(parse(inR.value)) : ''; }
@@ -1007,8 +1031,11 @@ function parseTask(str) {
       $('zielInfo').innerHTML = '\u2013 freie Eingabe: Start-Gleichung schreiben, dann Pr\u00fcfen';
     }
     drawVerlauf();
+    buildVarKeys();
     updatePreview();
-    inL.focus(); focusEl = inL;
+    updateUndoBtn();
+    if (freeMode) { inL.focus(); focusEl = inL; }
+    else { inOp.focus(); focusEl = inOp; }
   }
 
   // ---------- Pruefen ----------
@@ -1025,11 +1052,12 @@ function parseTask(str) {
       target = inZiel.value.trim() || null;
       lines.push({ L: L, R: R, opAfter: null });
       showEq(L, R); drawVerlauf(); waageGut();
+      updateUndoBtn(); buildVarKeys();
       inL.value = ''; inR.value = ''; updatePreview();
       $('zielInfo').innerHTML = target
         ? '\u2013 stelle nach <b>' + render({ op: 'var', v: target }) + '</b> um'
         : '\u2013 frei probieren, die Waage passt auf';
-      inL.focus();
+      inOp.focus(); focusEl = inOp;
       return;
     }
 
@@ -1060,9 +1088,11 @@ function parseTask(str) {
     showEq(res.newL, res.newR);
     drawVerlauf();
     waageGut();
+    updateUndoBtn();
     inL.value = ''; inR.value = ''; inOp.value = '';
     updatePreview();
-    inL.focus();
+    if (opDock.parentElement !== opPark) { inOp.focus(); focusEl = inOp; }
+    else { inL.focus(); focusEl = inL; }
 
     if (target && isSolved(res.newL, res.newR, target) && !solvedShown) {
       solvedShown = true;
@@ -1089,6 +1119,10 @@ function parseTask(str) {
       render({ op: 'var', v: tgt }) + ' = ' + num(k.val) + ' \u2714';
   }
 
+  function updateUndoBtn() {
+    btnUndo.disabled = lines.length <= (freeMode ? 0 : 1);
+  }
+
   // ---------- Undo ----------
   function undo() {
     if (lines.length <= (freeMode ? 0 : 1)) return;
@@ -1101,19 +1135,39 @@ function parseTask(str) {
       showEq(null, null);
     }
     solvedShown = false;
-    drawVerlauf(); quiet(); updatePreview();
+    drawVerlauf(); quiet(); updatePreview(); updateUndoBtn();
   }
 
   // ---------- Tastatur ----------
-  const VARS = ['U','R','I','P','W','Q','t','s','v','m',
+  const VARS_ALL = ['U','R','I','P','W','Q','t','s','v','m',
                 'a','f','T','A','l','x','y','b','c','\u03c1',
-                '\u03b7','L','C','N','n'];
+                '\u03b7','L','C','N','n','\u03c4','\u03c9','\u0394'];
   const kv = $('kVars');
-  VARS.forEach(v => {
-    const b = document.createElement('button');
-    b.className = 'key'; b.textContent = v;
-    kv.appendChild(b);
-  });
+
+  function orderedTaskVars() {
+    const out = [];
+    const seen = new Set();
+    function walk(n) {
+      if (!n) return;
+      if (n.op === 'var' && !seen.has(n.v)) { seen.add(n.v); out.push(n.v); }
+      if (n.a) walk(n.a);
+      if (n.b) walk(n.b);
+    }
+    if (lines.length) { walk(lines[0].L); walk(lines[0].R); }
+    if (target && !seen.has(target)) out.push(target);
+    return out;
+  }
+
+  function buildVarKeys() {
+    kv.innerHTML = '';
+    const list = (!freeMode && lines.length) ? orderedTaskVars() : VARS_ALL;
+    list.forEach(v => {
+      const b = document.createElement('button');
+      b.className = 'key'; b.textContent = v;
+      kv.appendChild(b);
+      wireKey(b);
+    });
+  }
 
   function insert(txt) {
     const el = focusEl || inL;
@@ -1135,11 +1189,12 @@ function parseTask(str) {
     onInput();
   }
 
-  document.querySelectorAll('.key').forEach(k => {
+  function wireKey(k) {
     k.addEventListener('mousedown', ev => ev.preventDefault());
     k.addEventListener('touchstart', ev => { ev.preventDefault(); handleKey(k); }, { passive: false });
     k.addEventListener('click', () => handleKey(k));
-  });
+  }
+  document.querySelectorAll('.key').forEach(wireKey);
   let lastTouch = 0;
   function handleKey(k) {
     const now = Date.now();
