@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Wechselstrom am Widerstand anschaulich: Der Zeiger dreht, die Sinuskurve entsteht. Scheitelwert, Effektivwert, Periodendauer, Frequenz und Momentanleistung.">
+<title>Sinus und Zeiger – Wechselstrom am Widerstand</title>
+<style>
+:root { --hblue: #00468c; --hbg: #ebf2fa; --hgruen: #146e3c;
+  --warnrot: #aa1e1e; --orange: #b36b00; --grau: #8194a8; --linie: #dce5ee; }
+* { box-sizing: border-box; }
+body { font-family: Georgia, 'Times New Roman', serif; margin: 0;
+  background: #f7f8fa; color: #1a1a1a; }
+#sitebar { display: flex; align-items: center; gap: 9px; min-height: 46px;
+  padding: 2px 14px; background: white; border-bottom: 1.5px solid var(--linie);
+  color: var(--hblue); text-decoration: none; font-weight: bold; font-size: 0.98rem; }
+#sitebar .sblogo { width: 27px; height: 27px; display: grid; place-items: center;
+  border: 1.5px solid var(--hblue); border-radius: 7px; background: var(--hbg);
+  font-size: 1.05rem; }
+#sitebar .sbdim { color: var(--grau); font-weight: normal; font-size: 0.85rem; }
+#sitebar:active { background: var(--hbg); }
+.wrap { max-width: 1440px; margin: 0 auto; padding: 8px 14px 26px; }
+h1 { color: var(--hblue); font-size: 1.5rem; margin: 6px 0 2px; }
+.sub { color: #556; margin: 0 0 12px; }
+@media (min-width: 1200px) {
+  h1, .sub { display: inline; }
+  .sub { margin-left: 14px; }
+  .titelzeile { margin: 6px 0 10px; }
+}
+#layout { display: grid; gap: 14px; align-items: start;
+  grid-template-columns: 330px minmax(0, 1fr) 400px; }
+.spalte { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.karte { min-width: 0; }
+@media (max-width: 1199px) {
+  #layout { grid-template-columns: 346px 1fr; grid-template-rows: auto auto auto auto;
+    grid-template-areas: "kreis kurven" "steuer kurven" "eingaben kurven" "eingaben werte"; }
+  .spalte { display: contents; }
+  #kreisKarte { grid-area: kreis; } #steuer { grid-area: steuer; }
+  #eingaben { grid-area: eingaben; } #kurvenKarte { grid-area: kurven; }
+  #werte { grid-area: werte; }
+}
+.karte { background: white; border: 2px solid var(--hblue); border-radius: 14px;
+  padding: 12px 14px; }
+button { font: inherit; min-height: 48px; padding: 8px 14px; border-radius: 10px;
+  border: 1.5px solid var(--hblue); background: white; color: var(--hblue);
+  cursor: pointer; touch-action: manipulation; }
+button:active { background: var(--hbg); }
+:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+svg { display: block; width: 100%; height: auto; font-family: inherit; }
+#kreis { max-width: 320px; margin: 0 auto; touch-action: none; cursor: grab; }
+#kreis:active { cursor: grabbing; }
+.achse { stroke: #9db4cc; stroke-width: 1.2; }
+.pfeilgrau { fill: #9db4cc; }
+.ring { fill: none; stroke: #b9c9da; stroke-width: 1.5; }
+.tick { font-size: 13px; fill: #556; }
+.tlbl { font-size: 13px; fill: #556; paint-order: stroke; stroke: white;
+  stroke-width: 4px; stroke-linejoin: round; }
+.lbl { font-size: 15px; font-style: italic; paint-order: stroke; stroke: white;
+  stroke-width: 4px; stroke-linejoin: round; }
+.blau { fill: var(--hblue); } .gruen { fill: var(--hgruen); } .oran { fill: var(--orange); }
+.zeigerU { stroke: var(--hblue); stroke-width: 3.5; stroke-linecap: round; }
+.zeigerI { stroke: var(--hgruen); stroke-width: 3; stroke-linecap: round; }
+.bogen { fill: none; stroke: var(--hblue); stroke-width: 1.5; }
+.proj { stroke: var(--hblue); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.projI { stroke: var(--hgruen); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.projP { stroke: var(--orange); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.lot { stroke: #9db4cc; stroke-width: 1; stroke-dasharray: 2 3; }
+.ukomp { stroke: var(--hblue); stroke-width: 6; stroke-linecap: butt; opacity: .55; }
+.ikomp { stroke: var(--hgruen); stroke-width: 6; stroke-linecap: butt; opacity: .55; }
+.leise { fill: none; stroke-width: 1.5; opacity: .22; }
+.kurveU { fill: none; stroke: var(--hblue); stroke-width: 3; stroke-linejoin: round; }
+.kurveI { fill: none; stroke: var(--hgruen); stroke-width: 2.5; stroke-dasharray: 8 5;
+  stroke-linejoin: round; }
+.kurveP { fill: none; stroke: var(--orange); stroke-width: 3; stroke-linejoin: round; }
+.flaecheP { fill: var(--orange); opacity: .14; stroke: none; }
+.hilfU { stroke: var(--hblue); stroke-width: 1; stroke-dasharray: 3 4; opacity: .7; }
+.hilfI { stroke: var(--hgruen); stroke-width: 1; stroke-dasharray: 3 4; opacity: .7; }
+.hilfP { stroke: var(--orange); stroke-width: 1; stroke-dasharray: 3 4; opacity: .8; }
+.punktU { fill: var(--hblue); stroke: white; stroke-width: 2; }
+.punktI { fill: var(--hgruen); stroke: white; stroke-width: 2; }
+.punktP { fill: var(--orange); stroke: white; stroke-width: 2; }
+
+.kopfzeile { display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.kopfzeile .titel { color: var(--hblue); font-weight: bold; }
+.kopfzeile .titel i { font-weight: normal; }
+.seg { display: inline-flex; border: 1.5px solid var(--hblue); border-radius: 10px;
+  overflow: hidden; }
+.seg button { border: 0; border-radius: 0; border-left: 1.5px solid var(--hblue);
+  min-height: 44px; padding: 6px 12px; font-size: 0.95rem; }
+.seg button:first-child { border-left: 0; }
+.seg button.an { background: var(--hblue); color: white; }
+.legende { display: flex; gap: 14px 18px; flex-wrap: wrap; font-size: 0.9rem;
+  color: #556; margin: 6px 0 0; }
+.legende i { font-style: italic; }
+.lu, .li, .lp { display: inline-block; width: 22px; height: 0; vertical-align: middle;
+  margin-right: 5px; }
+.lu { border-top: 3px solid var(--hblue); }
+.li { border-top: 3px dashed var(--hgruen); }
+.lp { border-top: 3px solid var(--orange); }
+label.chk { display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
+  cursor: pointer; color: var(--hblue); }
+label.chk input { width: 22px; height: 22px; accent-color: var(--hblue); }
+
+/* Regler */
+.regler { margin: 2px 0 4px; }
+.regler .kopf { display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; }
+.regler .kopf b { color: var(--hblue); font-weight: normal; font-size: 1.02rem; }
+.regler .kopf i { font-style: italic; }
+.regler output { color: var(--hblue); font-weight: bold; font-size: 1.1rem;
+  white-space: nowrap; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%;
+  height: 46px; background: transparent; margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px;
+  background: #c9d6e3; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 30px;
+  height: 30px; border-radius: 50%; background: var(--hblue); border: 3px solid white;
+  box-shadow: 0 0 0 1.5px var(--hblue); margin-top: -11px; }
+input[type=range]::-moz-range-track { height: 8px; border-radius: 4px;
+  background: #c9d6e3; }
+input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%;
+  background: var(--hblue); border: 3px solid white; box-shadow: 0 0 0 1.5px var(--hblue); }
+.reihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+#play { background: var(--hblue); color: white; font-weight: bold; min-width: 130px; }
+#play:active { background: #003064; }
+#winkelOut { font-size: 1.05rem; }
+#winkelOut small { color: #556; font-weight: normal; font-size: 0.9rem; }
+
+/* Werte */
+table { border-collapse: collapse; width: 100%; font-size: 1.02rem; }
+td { padding: 5px 4px; vertical-align: baseline; border-bottom: 1px solid var(--linie); }
+tr:last-child td { border-bottom: 0; }
+td.f { color: var(--hblue); white-space: nowrap; }
+td.w { text-align: right; font-weight: bold; white-space: nowrap; }
+td.g { color: #556; white-space: nowrap; }
+tr.kopf td { color: var(--hblue); font-weight: bold; border-bottom: 1.5px solid var(--hblue);
+  padding-top: 10px; }
+tr.kopf td span { font-weight: normal; color: #556; }
+tr.kopf:first-child td { padding-top: 0; }
+sub { font-size: 0.72em; }
+.merk { background: var(--hbg); border-left: 4px solid var(--hblue);
+  padding: 7px 10px; border-radius: 0 8px 8px 0; font-size: 0.93rem; margin-top: 10px; }
+.merk p { margin: 3px 0; }
+footer { text-align: center; color: var(--grau); font-size: 0.85rem; padding: 10px 0 18px; }
+
+@media (max-width: 820px) {
+  #layout { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: none; }
+  #kreisKarte, #steuer, #eingaben, #kurvenKarte, #werte { grid-area: auto; }
+  #kreisKarte { order: 1; }
+  #kurvenKarte { order: 2; }
+  #eingaben { order: 3; }
+  #werte { order: 4; }
+  #steuer { order: 5; position: sticky; bottom: 0; z-index: 5;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, .10); }
+  #steuer { padding: 6px 12px 8px; }
+  #steuer .regler { margin: 0; }
+  #steuer input[type=range] { height: 40px; }
+  #steuer button { min-height: 44px; }
+  #play { min-width: 0; padding: 6px 12px; }
+  #kreis { max-width: 280px; }
+  #kurve .tick, #kurve .tlbl, #leistung .tick, #leistung .tlbl { font-size: 24px; }
+  #kurve .lbl, #leistung .lbl { font-size: 27px; }
+  #kurve tspan[font-size], #leistung tspan[font-size] { font-size: 17px; }
+  #kurve .kurveU, #kurve .kurveI, #leistung .kurveP { stroke-width: 4; }
+  #kurve .punktU, #kurve .punktI, #leistung .punktP { r: 8; }
+  #leistung .tick.oran { font-size: 17px; }
+  h1 { font-size: 1.3rem; }
+  table { font-size: 0.95rem; }
+  td.g { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+</style>
+</head>
+<body>
+<a id="sitebar" href="../../" aria-label="Zur Startseite ohmstrom.de">
+  <span class="sblogo" aria-hidden="true">&Omega;</span>
+  ohmstrom.de <span class="sbdim">&middot; alle Anwendungen</span>
+</a>
+<div class="wrap">
+  <div class="titelzeile">
+  <h1>Sinus und Zeiger &ndash; Wechselstrom am Widerstand</h1>
+  <p class="sub">Der Zeiger dreht, die Kurve entsteht. Am Widerstand laufen Spannung und Strom im Gleichtakt.</p>
+  </div>
+
+  <div id="layout">
+    <div class="spalte">
+
+      <div class="karte" id="kreisKarte">
+        <div class="kopfzeile"><span class="titel">Zeigerdiagramm</span>
+          <span style="color:#556;font-size:.9rem">Zeiger mit dem Finger drehen</span></div>
+        <svg id="kreis" viewBox="0 0 320 320" role="img"
+          aria-label="Zeigerdiagramm: Spannungs- und Stromzeiger drehen sich gemeinsam; ihre Höhe über der waagerechten Achse ist der Momentanwert.">
+          <defs>
+            <marker id="pfU" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="#00468c"/></marker>
+            <marker id="pfI" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" fill="#146e3c"/></marker>
+            <marker id="pfG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" class="pfeilgrau"/></marker>
+          </defs>
+          <line class="achse" x1="18" y1="160" x2="300" y2="160" marker-end="url(#pfG)"/>
+          <line class="achse" x1="160" y1="302" x2="160" y2="20" marker-end="url(#pfG)"/>
+          <circle class="ring" cx="160" cy="160" r="120"/>
+          <g id="kTicks" class="tick"></g>
+          <path id="bogen" class="bogen"/>
+          <text id="bogenLbl" class="lbl blau" text-anchor="middle"></text>
+          <line id="lotU" class="lot"/>
+          <line id="projU" class="proj"/>
+          <line id="projI" class="projI"/>
+          <line id="uKomp" class="ukomp"/>
+          <line id="iKomp" class="ikomp"/>
+          <line id="zI" class="zeigerI" marker-end="url(#pfI)"/>
+          <line id="zU" class="zeigerU" marker-end="url(#pfU)"/>
+          <text id="zULbl" class="lbl blau" text-anchor="middle">&ucirc;</text>
+          <text id="zILbl" class="lbl gruen" text-anchor="middle">&icirc;</text>
+          <circle cx="160" cy="160" r="3.5" fill="#00468c"/>
+        </svg>
+        <p class="legende"><span><span class="lu"></span><i>&ucirc;</i> Spannungszeiger</span>
+          <span><span class="li"></span><i>&icirc;</i> Stromzeiger</span></p>
+      </div>
+
+      <div class="karte" id="steuer">
+        <div class="regler">
+          <div class="kopf"><b>Drehwinkel <i>&omega;t</i></b><output id="winkelOut" for="winkel"></output></div>
+          <input type="range" id="winkel" min="0" max="360" step="1" value="30" aria-label="Drehwinkel in Grad">
+        </div>
+        <div class="reihe">
+          <button id="play" aria-pressed="false">&#9654; Drehen</button>
+          <div class="seg" id="tempo" role="group" aria-label="Geschwindigkeit">
+            <button data-t="30">langsam</button>
+            <button data-t="90" class="an">normal</button>
+            <button data-t="240">schnell</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="spalte">
+
+      <div class="karte" id="kurvenKarte">
+        <div class="kopfzeile">
+          <span class="titel">Spannung <i>u</i> und Strom <i>i</i></span>
+          <div class="seg" id="achse" role="group" aria-label="Beschriftung der Zeitachse">
+            <button data-a="grad" class="an">Winkel in &deg;</button>
+            <button data-a="rad">Winkel in rad</button>
+            <button data-a="zeit">Zeit in ms</button>
+          </div>
+        </div>
+        <svg id="kurve" viewBox="0 0 660 320" role="img"
+          aria-label="Liniendiagramm: Sinuskurven von Spannung und Strom über dem Drehwinkel; beide gehen gleichzeitig durch null.">
+          <line class="achse" x1="30" y1="160" x2="640" y2="160" marker-end="url(#pfG)"/>
+          <line class="achse" x1="56" y1="306" x2="56" y2="14" marker-end="url(#pfG)"/>
+          <text class="tick" x="66" y="24"><tspan font-style="italic">u</tspan>, <tspan font-style="italic">i</tspan></text>
+          <text id="kAchsLbl" class="tick" x="636" y="150" text-anchor="end"></text>
+          <g id="kTicksK"></g>
+          <line class="hilfU" x1="56" y1="40" x2="600" y2="40"/>
+          <line class="hilfU" x1="56" y1="75.1" x2="600" y2="75.1"/>
+          <line class="hilfI" x1="56" y1="88" x2="600" y2="88"/>
+          <line class="hilfI" x1="56" y1="109.1" x2="600" y2="109.1"/>
+          <text class="lbl blau" x="48" y="45" text-anchor="end">&ucirc;</text>
+          <text class="lbl blau" x="48" y="80" text-anchor="end">U<tspan font-size="10" dy="3">eff</tspan></text>
+          <text class="tick" x="48" y="164" text-anchor="end">0</text>
+          <text class="lbl blau" x="48" y="285" text-anchor="end">&minus;&ucirc;</text>
+          <text class="lbl gruen" x="606" y="93">&icirc;</text>
+          <text class="lbl gruen" x="606" y="114">I<tspan font-size="10" dy="3">eff</tspan></text>
+          <text class="lbl gruen" x="606" y="237">&minus;&icirc;</text>
+          <path id="leiseU" class="leise" stroke="#00468c"/>
+          <path id="leiseI" class="leise" stroke="#146e3c"/>
+          <line id="kProjU" class="proj"/>
+          <line id="kProjI" class="projI"/>
+          <line id="kLot" class="lot"/>
+          <path id="kurveI" class="kurveI"/>
+          <path id="kurveU" class="kurveU"/>
+          <circle id="kPunktI" class="punktI" r="5"/>
+          <circle id="kPunktU" class="punktU" r="6"/>
+        </svg>
+        <p class="legende"><span><span class="lu"></span><i>u</i> = <i>&ucirc;</i> &middot; sin(<i>&omega;t</i>)</span>
+          <span><span class="li"></span><i>i</i> = <i>&icirc;</i> &middot; sin(<i>&omega;t</i>)</span>
+          <span style="margin-left:auto"><label class="chk"><input type="checkbox" id="pZeigen" checked> Leistung <i>p</i> zeigen</label></span></p>
+        <div id="pBlock">
+          <div class="kopfzeile"><span class="titel">Leistung <i>p</i> = <i>u</i> &middot; <i>i</i></span></div>
+          <svg id="leistung" viewBox="0 0 660 170" role="img"
+            aria-label="Liniendiagramm: Momentanleistung pulsiert mit doppelter Frequenz zwischen null und dem Scheitelwert, wird nie negativ.">
+            <line class="achse" x1="30" y1="145" x2="640" y2="145" marker-end="url(#pfG)"/>
+            <line class="achse" x1="56" y1="165" x2="56" y2="8" marker-end="url(#pfG)"/>
+            <text class="tick" x="66" y="18"><tspan font-style="italic">p</tspan></text>
+            <text id="pAchsLbl" class="tick" x="636" y="135" text-anchor="end"></text>
+            <g id="kTicksP"></g>
+            <line class="hilfP" x1="56" y1="25" x2="600" y2="25"/>
+            <line class="hilfP" x1="56" y1="85" x2="600" y2="85"/>
+            <text class="lbl oran" x="48" y="30" text-anchor="end">p&#770;</text>
+            <text class="lbl oran" x="48" y="90" text-anchor="end">P</text>
+            <text class="tick" x="48" y="149" text-anchor="end">0</text>
+            <text class="tick oran" x="606" y="30">= 2 &middot; P</text>
+            <path id="leiseP" class="leise" stroke="#b36b00"/>
+            <path id="flaecheP" class="flaecheP"/>
+            <line id="pLot" class="lot"/>
+            <line id="pProj" class="projP"/>
+            <path id="kurveP" class="kurveP"/>
+            <circle id="pPunkt" class="punktP" r="6"/>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+    <div class="spalte">
+
+      <div class="karte" id="eingaben">
+        <div class="regler">
+          <div class="kopf"><b>Spannung <i>U</i><sub>eff</sub></b><output id="ueffOut" for="ueff"></output></div>
+          <input type="range" id="ueff" min="0" max="5" step="1" value="5" aria-label="Effektivwert der Spannung">
+        </div>
+        <div class="regler">
+          <div class="kopf"><b>Frequenz <i>f</i></b><output id="fOut" for="freq"></output></div>
+          <input type="range" id="freq" min="0" max="6" step="1" value="2" aria-label="Frequenz">
+        </div>
+        <div class="regler">
+          <div class="kopf"><b>Widerstand <i>R</i></b><output id="rOut" for="wid"></output></div>
+          <input type="range" id="wid" min="0" max="6" step="1" value="3" aria-label="Widerstand">
+        </div>
+      </div>
+
+      <div class="karte" id="werte">
+        <table>
+          <tr class="kopf"><td colspan="3">Kenngr&ouml;&szlig;en <span>&ndash; gelten f&uuml;r die ganze Kurve</span></td></tr>
+          <tr><td class="g">Scheitelwert der Spannung</td><td class="f"><i>&ucirc;</i> = &radic;2 &middot; <i>U</i><sub>eff</sub></td><td class="w" id="vUh"></td></tr>
+          <tr><td class="g">Scheitelwert des Stroms</td><td class="f"><i>&icirc;</i> = <i>&ucirc;</i> : <i>R</i></td><td class="w" id="vIh"></td></tr>
+          <tr><td class="g">Effektivwert des Stroms</td><td class="f"><i>I</i><sub>eff</sub> = <i>U</i><sub>eff</sub> : <i>R</i></td><td class="w" id="vIeff"></td></tr>
+          <tr><td class="g">Periodendauer</td><td class="f"><i>T</i> = 1 : <i>f</i></td><td class="w" id="vT"></td></tr>
+          <tr><td class="g">Kreisfrequenz</td><td class="f"><i>&omega;</i> = 2 &middot; &pi; &middot; <i>f</i></td><td class="w" id="vOm"></td></tr>
+          <tr><td class="g">Wirkleistung</td><td class="f"><i>P</i> = <i>U</i><sub>eff</sub> &middot; <i>I</i><sub>eff</sub></td><td class="w" id="vP"></td></tr>
+          <tr class="kopf"><td colspan="3">Momentanwerte <span id="vWinkel"></span></td></tr>
+          <tr><td class="g">Spannung jetzt</td><td class="f"><i>u</i> = <i>&ucirc;</i> &middot; sin(<i>&omega;t</i>)</td><td class="w" id="vU"></td></tr>
+          <tr><td class="g">Strom jetzt</td><td class="f"><i>i</i> = <i>u</i> : <i>R</i></td><td class="w" id="vI"></td></tr>
+          <tr><td class="g">Leistung jetzt</td><td class="f"><i>p</i> = <i>u</i> &middot; <i>i</i></td><td class="w" id="vPm"></td></tr>
+        </table>
+        <div class="merk">
+          <p>Am Widerstand haben <i>u</i> und <i>i</i> ihre Nulldurchg&auml;nge und Scheitel zur gleichen Zeit: Phasenverschiebung <i>&phi;</i> = 0.</p>
+          <p>Die Leistung pulsiert mit doppelter Frequenz und wird nie negativ &ndash; ein Widerstand nimmt immer Leistung auf.</p>
+          <p>Die Drehung hier ist Zeitlupe. Bei 50 Hz dreht sich der Zeiger in Wirklichkeit 50-mal pro Sekunde.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<footer>L&auml;uft offline &middot; keine Daten werden gespeichert oder gesendet</footer>
+
+<script>
+// ============ Rechenkern (reine Funktionen, ohne DOM) ============
+const UEFF_LISTE = [6, 12, 24, 48, 110, 230];
+const F_LISTE = [1, 10, 50, 60, 100, 400, 1000];
+const R_LISTE = [10, 22, 47, 100, 220, 470, 1000];
+
+// Zahl mit 3 geltenden Ziffern, deutsches Komma, schmales Leerzeichen als Tausenderpunkt
+function fmt(x, sig) {
+  sig = sig || 3;
+  if (!isFinite(x)) return '\u2013';
+  const a = Math.abs(x);
+  if (a < 1e-9) return '0';
+  const mag = Math.floor(Math.log10(a));
+  let dec = Math.max(0, sig - 1 - mag);
+  if (dec > 4) dec = 4;
+  let s = a.toFixed(dec);
+  if (dec > 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
+  const t = s.split('.');
+  const int = t[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f');
+  return (x < 0 ? '\u2212' : '') + int + (t[1] ? ',' + t[1] : '');
+}
+// Wert mit Einheit; Strom unter 1 A in mA, Leistung ab 1000 W in kW
+function fmtE(x, einheit) {
+  const a = Math.abs(x);
+  if (einheit === 'A' && a > 0 && a < 1) return fmt(x * 1000) + '\u202fmA';
+  if (einheit === 'W' && a >= 1000) return fmt(x / 1000) + '\u202fkW';
+  if (einheit === 'W' && a > 0 && a < 1) return fmt(x * 1000) + '\u202fmW';
+  return fmt(x) + '\u202f' + einheit;
+}
+// Alle Groessen aus Ueff, f, R und dem Drehwinkel theta (Grad)
+function rechne(ueff, f, r, theta) {
+  const uh = Math.SQRT2 * ueff, ih = uh / r, ieff = ueff / r;
+  const T = 1 / f, om = 2 * Math.PI * f;
+  const rad = theta * Math.PI / 180, t = rad / om, sn = Math.sin(rad);
+  const u = uh * sn, i = ih * sn;
+  return { uh: uh, ih: ih, ieff: ieff, T: T, om: om, rad: rad, t: t, sn: sn,
+           u: u, i: i, p: u * i, P: ueff * ieff, ph: uh * ih };
+}
+if (typeof module !== 'undefined') module.exports = { UEFF_LISTE, F_LISTE, R_LISTE, fmt, fmtE, rechne };
+</script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const DEG = Math.PI / 180;
+
+  // Geometrie: Kreis (320x320) und Kurven (660 breit); u-Amplitude 120, i-Amplitude 72
+  const K = { cx: 160, cy: 160, ru: 120, ri: 72 };
+  const C = { x0: 56, x1: 600, yc: 160, au: 120, ai: 72, py0: 145, pa: 120 };
+  const xOf = d => C.x0 + (C.x1 - C.x0) * d / 360;
+  const yU = d => C.yc - C.au * Math.sin(d * DEG);
+  const yI = d => C.yc - C.ai * Math.sin(d * DEG);
+  const yP = d => { const s = Math.sin(d * DEG); return C.py0 - C.pa * s * s; };
+
+  const st = { theta: 30, ueff: 230, f: 50, r: 100, achse: 'grad', tempo: 90, laeuft: false };
+  let acc = 30, last = null, dragging = false;
+
+  const el = {};
+  ['kreis', 'kTicks', 'bogen', 'bogenLbl', 'lotU', 'projU', 'projI', 'uKomp', 'iKomp',
+   'zI', 'zU', 'zULbl', 'zILbl', 'kurve', 'kAchsLbl', 'kTicksK', 'leiseU', 'leiseI',
+   'kProjU', 'kProjI', 'kLot', 'kurveI', 'kurveU', 'kPunktI', 'kPunktU',
+   'pAchsLbl', 'kTicksP', 'leiseP', 'flaecheP', 'pLot', 'pProj', 'kurveP', 'pPunkt',
+   'pBlock', 'pZeigen', 'winkel', 'winkelOut', 'play', 'tempo', 'achse',
+   'ueff', 'freq', 'wid', 'ueffOut', 'fOut', 'rOut',
+   'vUh', 'vIh', 'vIeff', 'vT', 'vOm', 'vP', 'vWinkel', 'vU', 'vI', 'vPm'
+  ].forEach(id => { el[id] = $(id); });
+
+  // ---------- Pfade ----------
+  function winkelListe(bis) {
+    const L = [];
+    for (let a = 0; a < bis; a += 2) L.push(a);
+    L.push(bis);
+    return L;
+  }
+  function pfad(fn, bis) {
+    return winkelListe(bis).map((a, k) =>
+      (k ? 'L' : 'M') + xOf(a).toFixed(1) + ' ' + fn(a).toFixed(1)).join(' ');
+  }
+  function setAttr(e, o) { for (const k in o) e.setAttribute(k, o[k]); }
+  function line(e, x1, y1, x2, y2) { setAttr(e, { x1: x1, y1: y1, x2: x2, y2: y2 }); }
+
+  // ---------- Achsenbeschriftung je Modus ----------
+  const RAD_LBL = ['0', '\u03c0/2', '\u03c0', '3\u03c0/2', '2\u03c0'];
+  const T_LBL = ['0', 'T/4', 'T/2', '3T/4', 'T'];
+  function tickText(k, T) {
+    if (st.achse === 'grad') return (k * 90) + '\u00b0';
+    if (st.achse === 'rad') return RAD_LBL[k];
+    return k ? fmt(T * 1000 * k / 4) + '\u202fms' : '0';
+  }
+  function kreisText(k) {
+    if (st.achse === 'grad') return (k * 90) + '\u00b0';
+    if (st.achse === 'rad') return RAD_LBL[k];
+    return T_LBL[k];
+  }
+  function zeichneTicks() {
+    const T = 1 / st.f;
+    // Kreis: 4 Beschriftungen aussen am Ring
+    el.kTicks.innerHTML = '';
+    const pos = [[296, 176, 'start'], [168, 30, 'start'], [24, 176, 'end'], [168, 312, 'start']];
+    pos.forEach((p, k) => {
+      const t = document.createElementNS(NS, 'text');
+      setAttr(t, { x: p[0], y: p[1], 'text-anchor': p[2] });
+      t.textContent = kreisText(k);
+      el.kTicks.appendChild(t);
+    });
+    // Kurven: 5 Striche mit Beschriftung
+    [[el.kTicksK, C.yc, 178], [el.kTicksP, C.py0, 163]].forEach(g => {
+      g[0].innerHTML = '';
+      for (let k = 0; k <= 4; k++) {
+        const x = xOf(k * 90);
+        const l = document.createElementNS(NS, 'line');
+        setAttr(l, { x1: x, y1: g[1] - 5, x2: x, y2: g[1] + 5, class: 'achse' });
+        g[0].appendChild(l);
+        const t = document.createElementNS(NS, 'text');
+        setAttr(t, { x: x, y: g[2], 'text-anchor': k === 0 ? 'start' : 'middle', class: 'tlbl' });
+        t.textContent = tickText(k, T);
+        g[0].appendChild(t);
+      }
+    });
+    const lbl = st.achse === 'zeit' ? 't' : '\u03c9t';
+    el.kAchsLbl.textContent = lbl; el.pAchsLbl.textContent = lbl;
+    el.kAchsLbl.setAttribute('font-style', 'italic');
+    el.pAchsLbl.setAttribute('font-style', 'italic');
+  }
+
+  // ---------- Hauptzeichnung ----------
+  function render() {
+    const th = st.theta;
+    const w = rechne(st.ueff, st.f, st.r, th);
+    const cs = Math.cos(th * DEG), sn = w.sn;
+
+    // Kreis
+    const tx = K.cx + K.ru * cs, ty = K.cy - K.ru * sn;
+    const ix = K.cx + K.ri * cs, iy = K.cy - K.ri * sn;
+    line(el.zU, K.cx, K.cy, tx, ty);
+    line(el.zI, K.cx, K.cy, ix, iy);
+    line(el.lotU, tx, ty, tx, K.cy);
+    line(el.projU, tx, ty, 320, ty);
+    line(el.projI, ix, iy, 320, iy);
+    line(el.uKomp, K.cx, K.cy, K.cx, ty);
+    line(el.iKomp, K.cx + 8, K.cy, K.cx + 8, iy);
+    // Zeigerbeschriftung: seitlich versetzt, damit sie nicht auf der Spitze sitzt
+    const px = -sn, py = -cs;                 // senkrecht zum Zeiger (SVG-Koordinaten)
+    setAttr(el.zULbl, { x: K.cx + 104 * cs + 13 * px, y: K.cy - 104 * sn + 13 * py + 5 });
+    setAttr(el.zILbl, { x: K.cx + 56 * cs + 13 * px, y: K.cy - 56 * sn + 13 * py + 5 });
+    // Winkelbogen
+    const rb = 30, bx = K.cx + rb * cs, by = K.cy - rb * sn;
+    el.bogen.setAttribute('d', th < 0.5 ? '' :
+      'M' + (K.cx + rb) + ' ' + K.cy + ' A' + rb + ' ' + rb + ' 0 ' + (th > 180 ? 1 : 0) + ' 0 ' +
+      bx.toFixed(1) + ' ' + by.toFixed(1));
+    const hw = th / 2 * DEG, rl = 48;
+    setAttr(el.bogenLbl, { x: (K.cx + rl * Math.cos(hw)).toFixed(1),
+      y: (K.cy - rl * Math.sin(hw) + 5).toFixed(1) });
+    el.bogenLbl.textContent = th < 12 ? '' :
+      st.achse === 'grad' ? th + '\u00b0' :
+      st.achse === 'rad' ? fmt(w.rad) + '\u202frad' : fmt(w.t * 1000) + '\u202fms';
+
+    // Kurven u, i
+    el.kurveU.setAttribute('d', pfad(yU, th));
+    el.kurveI.setAttribute('d', pfad(yI, th));
+    const kx = xOf(th), kyu = yU(th), kyi = yI(th);
+    setAttr(el.kPunktU, { cx: kx, cy: kyu });
+    setAttr(el.kPunktI, { cx: kx, cy: kyi });
+    line(el.kProjU, 0, kyu, kx, kyu);
+    line(el.kProjI, 0, kyi, kx, kyi);
+    line(el.kLot, kx, Math.min(kyu, kyi, C.yc), kx, Math.max(kyu, kyi, C.yc));
+
+    // Leistung
+    const pp = pfad(yP, th), kyp = yP(th);
+    el.kurveP.setAttribute('d', pp);
+    el.flaecheP.setAttribute('d', pp + ' L' + kx.toFixed(1) + ' ' + C.py0 + ' L' + C.x0 + ' ' + C.py0 + ' Z');
+    setAttr(el.pPunkt, { cx: kx, cy: kyp });
+    line(el.pLot, kx, kyp, kx, C.py0);
+    line(el.pProj, C.x0, kyp, kx, kyp);
+
+    // Regler und Werte
+    el.winkel.value = th;
+    el.winkelOut.innerHTML = th + '\u00b0 <small>= ' + fmt(w.rad) + '\u202frad &nbsp;\u00b7&nbsp; t = ' +
+      fmt(w.t * 1000) + '\u202fms</small>';
+    el.vUh.textContent = fmtE(w.uh, 'V');
+    el.vIh.textContent = fmtE(w.ih, 'A');
+    el.vIeff.textContent = fmtE(w.ieff, 'A');
+    el.vT.textContent = fmt(w.T * 1000) + '\u202fms';
+    el.vOm.textContent = fmt(w.om) + '\u202f1/s';
+    el.vP.textContent = fmtE(w.P, 'W');
+    el.vWinkel.textContent = '\u2013 bei \u03c9t = ' + th + '\u00b0 = ' + fmt(w.rad) +
+      '\u202frad, t = ' + fmt(w.t * 1000) + '\u202fms';
+    el.vU.textContent = fmtE(w.u, 'V');
+    el.vI.textContent = fmtE(w.i, 'A');
+    el.vPm.textContent = fmtE(w.p, 'W');
+  }
+
+  function zeigeEingaben() {
+    el.ueffOut.textContent = fmt(st.ueff) + '\u202fV';
+    el.fOut.textContent = fmt(st.f) + '\u202fHz';
+    el.rOut.textContent = fmt(st.r) + '\u202f\u03a9';
+  }
+
+  // ---------- Animation ----------
+  function frame(ts) {
+    if (!st.laeuft) { last = null; return; }
+    if (last !== null) acc = (acc + st.tempo * (ts - last) / 1000) % 360;
+    last = ts;
+    st.theta = Math.round(acc) % 360;
+    render();
+    requestAnimationFrame(frame);
+  }
+  function start() {
+    if (st.laeuft) return;
+    st.laeuft = true; acc = st.theta; last = null;
+    el.play.innerHTML = '&#9632; Anhalten';
+    el.play.setAttribute('aria-pressed', 'true');
+    requestAnimationFrame(frame);
+  }
+  function stopp() {
+    st.laeuft = false; last = null;
+    el.play.innerHTML = '&#9654; Drehen';
+    el.play.setAttribute('aria-pressed', 'false');
+  }
+  el.play.addEventListener('click', () => { st.laeuft ? stopp() : start(); });
+
+  // ---------- Zeiger am Kreis drehen ----------
+  function winkelAusEvent(ev) {
+    const r = el.kreis.getBoundingClientRect();
+    const s = 320 / r.width;
+    const x = (ev.clientX - r.left) * s - K.cx, y = (ev.clientY - r.top) * s - K.cy;
+    if (x * x + y * y < 100) return;           // Mitte: keine Richtung
+    let d = Math.atan2(-y, x) / DEG;
+    if (d < 0) d += 360;
+    st.theta = Math.round(d) % 360; acc = st.theta;
+    render();
+  }
+  el.kreis.addEventListener('pointerdown', ev => {
+    stopp(); dragging = true;
+    try { el.kreis.setPointerCapture(ev.pointerId); } catch (e) { /* alte Browser */ }
+    winkelAusEvent(ev); ev.preventDefault();
+  });
+  el.kreis.addEventListener('pointermove', ev => { if (dragging) winkelAusEvent(ev); });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t =>
+    el.kreis.addEventListener(t, () => { dragging = false; }));
+
+  // ---------- Regler ----------
+  el.winkel.addEventListener('input', () => {
+    stopp(); st.theta = parseInt(el.winkel.value, 10) % 360; acc = st.theta; render();
+  });
+  el.ueff.addEventListener('input', () => { st.ueff = UEFF_LISTE[el.ueff.value]; zeigeEingaben(); render(); });
+  el.freq.addEventListener('input', () => { st.f = F_LISTE[el.freq.value]; zeigeEingaben(); zeichneTicks(); render(); });
+  el.wid.addEventListener('input', () => { st.r = R_LISTE[el.wid.value]; zeigeEingaben(); render(); });
+
+  function segment(gruppe, attr, cb) {
+    gruppe.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      gruppe.querySelectorAll('button').forEach(x => x.classList.remove('an'));
+      b.classList.add('an');
+      cb(b.dataset[attr]);
+    }));
+  }
+  segment(el.tempo, 't', v => { st.tempo = parseInt(v, 10); });
+  segment(el.achse, 'a', v => { st.achse = v; zeichneTicks(); render(); });
+  el.pZeigen.addEventListener('change', () => {
+    el.pBlock.style.display = el.pZeigen.checked ? '' : 'none';
+  });
+
+  // ---------- Start ----------
+  el.leiseU.setAttribute('d', pfad(yU, 360));
+  el.leiseI.setAttribute('d', pfad(yI, 360));
+  el.leiseP.setAttribute('d', pfad(yP, 360));
+  zeigeEingaben();
+  zeichneTicks();
+  render();
+})();
+</script>
+</body>
+</html>
